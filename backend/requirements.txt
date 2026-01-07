@@ -1,0 +1,13 @@
+# FastAPI関連
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# 環境変数管理
+python-dotenv==1.0.0
+
+# 注: データベース関連の依存関係はフェーズ0-2で追加予定
+# sqlalchemy==2.0.23
+# pymysql==1.1.0
+# cryptography==41.0.7  # pymysqlに必要
+# alembic==1.12.1
+
