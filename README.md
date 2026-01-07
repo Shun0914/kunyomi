@@ -58,7 +58,7 @@ npm run dev
 
 ```bash
 cd backend
-# セットアップ手順は後日追加
+# セットアップ手順は docs/setup.md を参照してください
 ```
 
 ## 開発の進め方
@@ -98,12 +98,13 @@ cd backend
 
 ## ドキュメント
 
+- [開発環境セットアップ手順](./docs/setup.md) ⭐ 初めて開発する方向け
+- [GitHub開発ワークフロー手順書](./docs/github_workflow.md) ⭐ 初心者向け
 - [データ定義](./docs/data_definition.md)
 - [ER図](./docs/er_diagram.md)
 - [プロジェクト構造と開発フロー](./docs/project_structure.md)
 - [機能一覧とリリース計画](./docs/feature_roadmap.md)
 - [Week 1タスク分割](./docs/task_breakdown_week1.md)
-- [GitHub開発ワークフロー手順書](./docs/github_workflow.md) ⭐ 初心者向け
 - [ミーティング議事録](./minutes/)
 
 ## チーム
