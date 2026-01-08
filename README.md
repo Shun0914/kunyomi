@@ -103,13 +103,22 @@ cd backend
 
 ## ドキュメント
 
-- [開発環境セットアップ手順](./docs/setup.md) ⭐ 初めて開発する方向け
-- [GitHub開発ワークフロー手順書](./docs/github_workflow.md) ⭐ 初心者向け
-- [データ定義](./docs/data_definition.md)
-- [ER図](./docs/er_diagram.md)
+### セットアップ・ワークフロー
+- [開発環境セットアップ手順](./docs/setup/setup.md) ⭐ 初めて開発する方向け
+- [GitHub開発ワークフロー手順書](./docs/setup/github_workflow.md) ⭐ 初心者向け
+- [Week 1 開発ガイド](./docs/setup/week1_development_guide.md) ⭐ API実装の手順
+
+### 設計・データ定義
+- [データ定義](./docs/design/data_definition.md)
+- [ER図](./docs/design/er_diagram.md)
+- [機能一覧とリリース計画](./docs/design/feature_roadmap.md)
+- [ジャンルマスターデータ定義](./docs/design/genre_master_data.md)
+
+### タスク
+- [Week 1タスク分割](./docs/tasks/task_breakdown_week1.md)
+
+### その他
 - [プロジェクト構造と開発フロー](./docs/project_structure.md)
-- [機能一覧とリリース計画](./docs/feature_roadmap.md)
-- [Week 1タスク分割](./docs/task_breakdown_week1.md)
 - [ミーティング議事録](./minutes/)
 
 ## チーム

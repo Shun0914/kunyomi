@@ -5,11 +5,18 @@
 ```
 project_team11/
 ├── docs/                    # 設計ドキュメント
-│   ├── data_definition.md   # データ定義
-│   ├── er_diagram.md        # ER図
-│   ├── project_structure.md # このファイル
-│   ├── feature_roadmap.md   # 機能一覧とリリース計画
-│   └── task_breakdown_week1.md # Week 1タスク分割
+│   ├── setup/               # セットアップ・ワークフロー系
+│   │   ├── setup.md
+│   │   ├── github_workflow.md
+│   │   └── week1_development_guide.md
+│   ├── design/              # 機能・データ定義関連
+│   │   ├── data_definition.md
+│   │   ├── er_diagram.md
+│   │   ├── feature_roadmap.md
+│   │   └── genre_master_data.md
+│   ├── tasks/               # タスク
+│   │   └── task_breakdown_week1.md
+│   └── project_structure.md # このファイル
 │
 ├── minutes/                  # ミーティング議事録
 │   ├── meeting_01.md
@@ -99,7 +106,7 @@ export async function createDocument(data: CreateDocumentRequest): Promise<Docum
 
 #### `backend/app/models/`
 **役割**: SQLAlchemyモデル（データベーステーブル定義）  
-**特徴**: `data_definition.md`に基づいて定義。
+**特徴**: `docs/design/data_definition.md`に基づいて定義。
 
 #### `backend/app/schemas/`
 **役割**: Pydanticスキーマ（リクエスト/レスポンスの型定義）  
@@ -110,7 +117,7 @@ export async function createDocument(data: CreateDocumentRequest): Promise<Docum
 ## 開発の流れ
 
 ### 1. データベース設計
-1. `docs/data_definition.md`でテーブル定義を決定
+1. `docs/design/data_definition.md`でテーブル定義を決定
 2. `backend/app/models/`でSQLAlchemyモデルを定義
 3. マイグレーションでテーブルを作成
 
@@ -221,7 +228,7 @@ uvicorn app.main:app --reload  # 開発サーバー起動（http://localhost:800
 
 ## 次のステップ
 
-1. [機能一覧とリリース計画](./feature_roadmap.md)を確認
-2. [Week 1タスク分割](./task_breakdown_week1.md)を確認
-3. 開発開始
+1. [機能一覧とリリース計画](./design/feature_roadmap.md)を確認
+2. [Week 1タスク分割](./tasks/task_breakdown_week1.md)を確認
+3. [Week 1 開発ガイド](./setup/week1_development_guide.md)を読んでAPI実装を開始
 

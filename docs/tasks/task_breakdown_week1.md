@@ -50,7 +50,7 @@
 **担当**: @しゅんすけ  
 **依存**: 0-2完了後  
 **内容**:
-- SQLAlchemyモデルの定義（data_definition.mdに基づく）
+- SQLAlchemyモデルの定義（`docs/design/data_definition.md`に基づく）
   - User
   - Genre
   - Keyword

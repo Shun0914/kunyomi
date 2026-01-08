@@ -225,7 +225,7 @@
 
 ## 次のステップ
 
-1. [プロジェクト構造](./project_structure.md)を確認
-2. [Week 1タスク分割](./task_breakdown_week1.md)を確認
-3. 開発開始
+1. [プロジェクト構造](../project_structure.md)を確認
+2. [Week 1タスク分割](../tasks/task_breakdown_week1.md)を確認
+3. [Week 1 開発ガイド](../setup/week1_development_guide.md)を読んで開発開始
 

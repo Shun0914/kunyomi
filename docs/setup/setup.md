@@ -166,8 +166,9 @@ npm run dev
 セットアップが完了したら、以下のドキュメントを確認してください：
 
 - [GitHub開発ワークフロー手順書](./github_workflow.md) - GitHubを使った開発の進め方
-- [プロジェクト構造と開発フロー](./project_structure.md) - プロジェクトの構造と開発の流れ
-- [Week 1タスク分割](./task_breakdown_week1.md) - Week 1のタスク一覧
+- [Week 1 開発ガイド](./week1_development_guide.md) - API実装の手順
+- [プロジェクト構造と開発フロー](../project_structure.md) - プロジェクトの構造と開発の流れ
+- [Week 1タスク分割](../tasks/task_breakdown_week1.md) - Week 1のタスク一覧
 
 ---
 

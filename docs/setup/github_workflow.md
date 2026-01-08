@@ -476,6 +476,6 @@ git branch -d feature/issue-7-document-list-api
 ## 参考リンク
 
 - [プロジェクト構造と開発フロー](./project_structure.md)
-- [Week 1タスク分割](./task_breakdown_week1.md)
+- [Week 1タスク分割](../tasks/task_breakdown_week1.md)
 - [GitHub公式ドキュメント](https://docs.github.com/ja)
 
