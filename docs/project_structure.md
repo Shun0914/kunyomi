@@ -15,29 +15,25 @@ project_team11/
 │   ├── meeting_01.md
 │   └── ...
 │
-├── frontend/                 # フロントエンド（React + Vite）
-│   ├── src/
-│   │   ├── api/             # APIクライアント関数
-│   │   │   ├── documents.ts
-│   │   │   ├── genres.ts
-│   │   │   └── keywords.ts
-│   │   ├── app/
-│   │   │   ├── components/  # Reactコンポーネント
-│   │   │   │   ├── KnowledgeList.tsx
-│   │   │   │   ├── KnowledgeDetail.tsx
-│   │   │   │   ├── KnowledgeForm.tsx
-│   │   │   │   ├── SearchBar.tsx
-│   │   │   │   ├── GenreSelector.tsx
-│   │   │   │   └── ui/      # UIコンポーネント（Radix UI等）
-│   │   │   ├── data/
-│   │   │   │   └── mockData.ts  # モックデータ（開発用）
-│   │   │   ├── types/
-│   │   │   │   └── knowledge.ts # TypeScript型定義
-│   │   │   └── App.tsx      # メインコンポーネント
-│   │   └── styles/          # CSS/Tailwind
+├── frontend/                 # フロントエンド（Next.js）
+│   ├── app/                  # Next.js App Router
+│   │   ├── page.tsx          # ページコンポーネント
+│   │   ├── layout.tsx        # レイアウトコンポーネント
+│   │   └── globals.css       # グローバルスタイル
+│   ├── lib/                  # ユーティリティ関数
+│   │   └── api/              # APIクライアント関数
+│   │       ├── client.ts     # APIクライアントのベース設定
+│   │       ├── documents.ts
+│   │       ├── genres.ts
+│   │       ├── keywords.ts
+│   │       └── index.ts
+│   ├── types/                # TypeScript型定義
+│   │   └── knowledge.ts
+│   ├── components/           # Reactコンポーネント（今後追加予定）
 │   ├── package.json
-│   ├── vite.config.ts
-│   └── postcss.config.mjs
+│   ├── next.config.ts
+│   └── tsconfig.json
+├── frontend_figma/           # 参考用（既存のReact+Viteコード）
 │
 ├── backend/                  # バックエンド（FastAPI）
 │   ├── app/
@@ -67,7 +63,7 @@ project_team11/
 
 ### フロントエンド
 
-#### `frontend/src/api/`
+#### `frontend/lib/api/`
 **役割**: バックエンドAPIを呼び出す関数を定義  
 **例**:
 ```typescript
@@ -77,11 +73,15 @@ export async function getDocument(id: number): Promise<Document>
 export async function createDocument(data: CreateDocumentRequest): Promise<Document>
 ```
 
-#### `frontend/src/app/components/`
-**役割**: Reactコンポーネント（UI部分）  
-**特徴**: 既存のコンポーネントはそのまま使用可能。変更するのはデータ取得部分のみ。
+#### `frontend/app/`
+**役割**: Next.js App Router（ページとレイアウト）  
+**特徴**: ファイルベースのルーティング。`app/page.tsx`が`/`に対応。
 
-#### `frontend/src/app/types/`
+#### `frontend/components/`
+**役割**: Reactコンポーネント（UI部分、今後追加予定）  
+**特徴**: 既存の`frontend_figma/`のコンポーネントを参考に、Next.js用に再実装予定。
+
+#### `frontend/types/`
 **役割**: TypeScript型定義  
 **特徴**: バックエンドのスキーマと一致させる必要がある。
 
@@ -120,8 +120,8 @@ export async function createDocument(data: CreateDocumentRequest): Promise<Docum
 3. 動作確認（Postman等でテスト）
 
 ### 3. フロントエンドAPIクライアント作成
-1. `frontend/src/api/`でAPI呼び出し関数を作成
-2. 型定義を`frontend/src/types/`に追加（必要に応じて）
+1. `frontend/lib/api/`でAPI呼び出し関数を作成
+2. 型定義を`frontend/types/`に追加（必要に応じて）
 
 ### 4. フロントエンドコンポーネント接続
 1. 既存コンポーネントのデータ取得部分を修正
@@ -140,9 +140,9 @@ export async function createDocument(data: CreateDocumentRequest): Promise<Docum
 ```
 [ユーザー操作]
     ↓
-[Reactコンポーネント]
+[Next.jsページ/コンポーネント] (frontend/app/)
     ↓
-[APIクライアント関数] (frontend/src/api/)
+[APIクライアント関数] (frontend/lib/api/)
     ↓
 [HTTPリクエスト]
     ↓
@@ -154,7 +154,7 @@ export async function createDocument(data: CreateDocumentRequest): Promise<Docum
     ↓
 [レスポンス]
     ↓
-[Reactコンポーネント]
+[Next.jsページ/コンポーネント]
     ↓
 [画面表示]
 ```
@@ -188,7 +188,7 @@ export async function createDocument(data: CreateDocumentRequest): Promise<Docum
 **全員が使う基盤部分**は、@しゅんすけが最初に作成します。
 
 - DBモデル定義（`backend/app/models/`）
-- APIクライアント関数の基本構造（`frontend/src/api/`）
+- APIクライアント関数の基本構造（`frontend/lib/api/`）
 - エラーハンドリングの共通処理
 
 これらが完成すれば、他のメンバーは並行して開発を進められます。
@@ -200,8 +200,8 @@ export async function createDocument(data: CreateDocumentRequest): Promise<Docum
 ### フロントエンド
 ```bash
 cd frontend
-npm install  # or pnpm install
-npm run dev  # 開発サーバー起動（http://localhost:5173）
+npm install
+npm run dev  # 開発サーバー起動（http://localhost:3000）
 ```
 
 ### バックエンド

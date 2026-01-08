@@ -18,10 +18,14 @@ project_team11/
 │   ├── data_definition.md
 │   └── er_diagram.md
 ├── minutes/           # ミーティング議事録
-├── frontend/          # フロントエンド（React + Vite）
-│   ├── src/
+├── frontend/          # フロントエンド（Next.js）
+│   ├── app/           # Next.js App Router
+│   ├── lib/           # ユーティリティ関数
+│   │   └── api/       # APIクライアント関数
+│   ├── types/         # TypeScript型定義
 │   ├── package.json
-│   └── vite.config.ts
+│   └── next.config.ts
+├── frontend_figma/    # 参考用（既存のReact+Viteコード）
 ├── backend/           # バックエンド（FastAPI）
 └── README.md
 ```
@@ -29,12 +33,11 @@ project_team11/
 ## 技術スタック
 
 ### フロントエンド
-- React 18
+- Next.js 16
+- React 19
 - TypeScript
-- Vite
 - Tailwind CSS
-- Radix UI
-- Material UI
+- App Router
 
 ### バックエンド
 - FastAPI
@@ -50,9 +53,11 @@ project_team11/
 
 ```bash
 cd frontend
-npm install  # or pnpm install
-npm run dev
+npm install
+npm run dev  # 開発サーバー起動（http://localhost:3000）
 ```
+
+詳細は [frontend/README.md](./frontend/README.md) を参照してください。
 
 ### バックエンド
 

@@ -101,13 +101,22 @@ cd frontend
 npm install  # or pnpm install
 ```
 
-### 3.2. 開発サーバーの起動
+### 3.2. 環境変数の設定（オプション）
+
+`.env.local`ファイルを作成し、APIのベースURLを設定します：
+
+```bash
+# frontend/.env.local
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+### 3.3. 開発サーバーの起動
 
 ```bash
 npm run dev
 ```
 
-ブラウザで http://localhost:5173 にアクセスします。
+ブラウザで http://localhost:3000 にアクセスします。
 
 ---
 
@@ -166,5 +175,6 @@ npm run dev
 
 - [FastAPI公式ドキュメント](https://fastapi.tiangolo.com/)
 - [SQLAlchemy公式ドキュメント](https://www.sqlalchemy.org/)
+- [Next.js公式ドキュメント](https://nextjs.org/)
 - [React公式ドキュメント](https://react.dev/)
 

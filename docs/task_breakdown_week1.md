@@ -83,7 +83,7 @@
 **担当**: @しゅんすけ or 経験者  
 **依存**: 0-3完了後（並行可能）  
 **内容**:
-- `frontend/src/api/`ディレクトリの作成
+- `frontend/lib/api/`ディレクトリの作成
 - APIクライアント関数の作成（型定義含む）
   - `documents.ts`（GET一覧、GET詳細、POST作成）
   - `genres.ts`（GET一覧）
