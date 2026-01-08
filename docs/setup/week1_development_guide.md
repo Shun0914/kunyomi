@@ -294,11 +294,14 @@ genres = db.query(Genre).options(
 
 ### Q: フロントエンドからAPIを呼び出すとCORSエラーが出る
 
-**A**: FastAPIにCORSミドルウェアを追加します。
+**A**: FastAPIにCORSミドルウェアを追加します。`backend/app/main.py`に以下を追加：
 
 ```python
 from fastapi.middleware.cors import CORSMiddleware
 
+app = FastAPI(...)
+
+# CORSミドルウェアを追加（ルーター登録の前）
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],  # Next.jsのデフォルトポート
@@ -306,6 +309,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ルーターを登録
+app.include_router(genres.router)
 ```
 
 ### Q: バリデーションエラーが出る
