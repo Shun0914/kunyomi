@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from sqlalchemy import text
 from app.db import engine
-from app.routers import keywords
+from app.routers import keywords, documents
 
 app = FastAPI(
     title="くんよみ API",
@@ -9,6 +9,7 @@ app = FastAPI(
     version="0.1.0"
 )
 app.include_router(keywords.router)
+app.include_router(documents.router)
 
 
 @app.get("/")
