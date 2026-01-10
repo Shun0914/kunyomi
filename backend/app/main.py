@@ -1,13 +1,16 @@
 from fastapi import FastAPI
 from sqlalchemy import text
 from app.db import engine
-from app.routers import keywords
+from app.routers import keywords, genre
 
 app = FastAPI(
     title="くんよみ API",
     description="社内ナレッジ管理システムのAPI",
     version="0.1.0"
 )
+
+# ルーターの登録
+app.include_router(genre.router)
 app.include_router(keywords.router)
 
 
