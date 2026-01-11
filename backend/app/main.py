@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from sqlalchemy import text
 from app.db import engine
-from app.routers import keywords, documents
+from app.routers import keywords, documents, genre
 
 app = FastAPI(
     title="くんよみ API",
