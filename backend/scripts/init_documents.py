@@ -59,7 +59,7 @@ def init_documents():
                 "created_by": 1,  # ユーザーIDを設定
                 "created_at": datetime.now() - timedelta(hours=6, minutes=30),
                 "updated_by": None,
-                "updated_at": None,
+                "updated_at": datetime.now() - timedelta(hours=6, minutes=30),  # created_atと同じ値に修正
                 "helpful_count": 0,
                 "view_count": 0,
                 "helpfulness_score": 0.00,
@@ -89,7 +89,7 @@ def init_documents():
                 "created_by": 2,  # ユーザーIDを設定
                 "created_at": datetime.now() - timedelta(hours=24, minutes=30),
                 "updated_by": None,
-                "updated_at": None,
+                "updated_at": datetime.now() - timedelta(hours=24, minutes=30),  # created_atと同じ値に修正
                 "helpful_count": 12,
                 "view_count": 450,
                 "helpfulness_score": 4.20,
@@ -119,7 +119,7 @@ def init_documents():
                 "created_by": 3,  # ユーザーIDを設定
                 "created_at": datetime.now() - timedelta(hours=24, minutes=30),
                 "updated_by": None,
-                "updated_at": None,
+                "updated_at": datetime.now() - timedelta(hours=24, minutes=30),  # created_atと同じ値に修正
                 "helpful_count": 7,
                 "view_count": 210,
                 "helpfulness_score": 3.90,
