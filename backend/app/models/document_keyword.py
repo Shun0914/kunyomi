@@ -20,8 +20,8 @@ class DocumentKeyword(Base):
     )
 
     # リレーションシップ
-    document = relationship("Document", backref="document_keyword_relations")
-    keyword = relationship("Keyword", backref="document_keyword_relations")
+    document = relationship("Document", backref="document_keyword_relations", overlaps="keywords,documents")
+    keyword = relationship("Keyword", backref="document_keyword_relations", overlaps="keywords,documents")
 
     def __repr__(self):
         return f"<DocumentKeyword(document_id={self.document_id}, keyword_id={self.keyword_id})>"

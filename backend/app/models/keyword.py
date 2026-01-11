@@ -16,7 +16,7 @@ class Keyword(Base):
     created_at = Column(DateTime, nullable=False, server_default=func.now())
 
     # リレーションシップ
-    documents = relationship("Document", secondary="document_keywords", back_populates="keywords")
+    documents = relationship("Document", secondary="document_keywords", back_populates="keywords", overlaps="document_keyword_relations")
 
     def __repr__(self):
         return f"<Keyword(id={self.id}, name='{self.name}', normalized_name='{self.normalized_name}')>"
