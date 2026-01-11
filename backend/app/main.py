@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from sqlalchemy import text
 from app.db import engine
+from app.routers import keywords, documents, genre
 from app.routers import keywords, genre
 
 app = FastAPI(
@@ -12,6 +13,7 @@ app = FastAPI(
 # ルーターの登録
 app.include_router(genre.router)
 app.include_router(keywords.router)
+app.include_router(documents.router)
 
 
 @app.get("/")
