@@ -35,7 +35,7 @@ class Document(Base):
     genre = relationship("Genre", backref="documents")
     creator = relationship("User", foreign_keys=[created_by], backref="created_documents")
     updater = relationship("User", foreign_keys=[updated_by], backref="updated_documents")
-    keywords = relationship("Keyword", secondary="document_keywords", back_populates="documents")
+    keywords = relationship("Keyword", secondary="document_keywords", back_populates="documents", overlaps="document_keyword_relations")
 
     def __repr__(self):
         return f"<Document(id={self.id}, title='{self.title}', status='{self.status.value}')>"

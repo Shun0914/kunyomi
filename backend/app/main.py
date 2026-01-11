@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from sqlalchemy import text
 from app.db import engine
-from app.routers import keywords, documents, genre
+from app.routers import keywords, documents, genre, documents_list
 
 app = FastAPI(
     title="くんよみ API",
@@ -13,7 +13,7 @@ app = FastAPI(
 app.include_router(genre.router)
 app.include_router(keywords.router)
 app.include_router(documents.router)
-
+app.include_router(documents_list.router)
 
 @app.get("/")
 def read_root():
