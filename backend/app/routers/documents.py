@@ -12,17 +12,11 @@ from app.schemas.document import (
     DocumentDetailResponse, 
     DocumentCreateRequest,
     DocumentCreateResponse)
-
-router = APIRouter(prefix="/api/documents", tags=["documents"])
-
-# 仮のユーザーID（認証機能がないため）
-TEMP_USER_ID = 1
-
-# ========== 既存のキーワード正規化関数をインポート ==========
 from app.routers.keywords import normalize_text
 
 router = APIRouter(prefix="/api/documents", tags=["documents"])
 
+# 仮のユーザーID（認証機能がないため）
 TEMP_USER_ID = 1
 
 @router.get("/{document_id}", response_model=DocumentDetailResponse)
