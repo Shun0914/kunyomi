@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from app.db import engine
 from app.routers import keywords, documents, genre
@@ -7,6 +8,17 @@ app = FastAPI(
     title="くんよみ API",
     description="社内ナレッジ管理システムのAPI",
     version="0.1.0"
+)
+# CORSミドルウェアを追加（ルーター登録の前に配置）
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",      # Next.js開発サーバー
+        "http://127.0.0.1:3000",      # 127.0.0.1でもアクセス可能に
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],              # すべてのHTTPメソッドを許可
+    allow_headers=["*"],              # すべてのヘッダーを許可
 )
 
 # ルーターの登録

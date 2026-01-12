@@ -15,6 +15,7 @@ export interface Genre {
   display_order: number;
   is_active: boolean;
   created_at: string;
+  children?: Genre[];  //階層構造対応
 }
 
 export interface Keyword {
