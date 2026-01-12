@@ -30,14 +30,14 @@ export async function getDocuments(
     queryParams.append('status', params.status);
   }
   if (params?.page) {
-    queryParams.append('page', String(params.page));
+    queryParams.append('skip', String(params.page));
   }
   if (params?.per_page) {
-    queryParams.append('per_page', String(params.per_page));
+    queryParams.append('limit', String(params.per_page));
   }
 
   const queryString = queryParams.toString();
-  const endpoint = `/api/documents${queryString ? `?${queryString}` : ''}`;
+  const endpoint = `/api/documents_list${queryString ? `?${queryString}` : ''}`;
   
   return get<DocumentListResponse>(endpoint);
 }
