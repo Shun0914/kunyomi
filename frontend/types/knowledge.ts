@@ -44,6 +44,29 @@ export interface Document {
   genre?: Genre;
 }
 
+/**
+ * ドキュメント一覧API用の型（ジャンル名・作成者名を含む）
+ * /api/documents_list エンドポイントのレスポンス用
+ */
+export interface Knowledge {
+  id: number;
+  title: string;
+  content: string;
+  genre_id: number;
+  genre_name: string;
+  external_link?: string;
+  status: 'draft' | 'published' | 'archived';
+  created_by: number;
+  creator_name: string;
+  created_at: string;
+  updated_at: string;
+  updated_by?: number | null;
+  helpful_count: number;
+  view_count: number;
+  helpfulness_score: number;
+  keywords?: Keyword[];
+}
+
 export interface DocumentEvaluation {
   id: number;
   document_id: number;
@@ -113,9 +136,11 @@ export interface DocumentListResponse {
 
 export interface SearchDocumentsParams {
   keyword?: string;
-  genre_id?: number;
+  genre_id?: number | null;
   status?: 'draft' | 'published' | 'archived';
   page?: number;
   per_page?: number;
+  skip?: number;
+  limit?: number;
 }
 

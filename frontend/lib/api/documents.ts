@@ -5,6 +5,7 @@ import { get, post, patch, del } from './client';
 import type {
   Document,
   DocumentListResponse,
+  Knowledge,
   CreateDocumentRequest,
   UpdateDocumentRequest,
   SearchDocumentsParams,
@@ -13,11 +14,11 @@ import type {
 /**
  * ドキュメント一覧を取得
  * @param params 検索パラメータ
- * @returns ドキュメント一覧と総数
+ * @returns ドキュメント一覧（配列）
  */
 export async function getDocuments(
   params?: SearchDocumentsParams
-): Promise<DocumentListResponse> {
+): Promise<Knowledge[]> {
   const queryParams = new URLSearchParams();
   
   if (params?.keyword) {
@@ -29,17 +30,22 @@ export async function getDocuments(
   if (params?.status) {
     queryParams.append('status', params.status);
   }
-  if (params?.page) {
+  // skip, limit を優先（page, per_page は後方互換性のため残す）
+  if (params?.skip !== undefined) {
+    queryParams.append('skip', String(params.skip));
+  } else if (params?.page !== undefined) {
     queryParams.append('skip', String(params.page));
   }
-  if (params?.per_page) {
+  if (params?.limit !== undefined) {
+    queryParams.append('limit', String(params.limit));
+  } else if (params?.per_page !== undefined) {
     queryParams.append('limit', String(params.per_page));
   }
 
   const queryString = queryParams.toString();
   const endpoint = `/api/documents_list${queryString ? `?${queryString}` : ''}`;
   
-  return get<DocumentListResponse>(endpoint);
+  return get<Knowledge[]>(endpoint);
 }
 
 /**
