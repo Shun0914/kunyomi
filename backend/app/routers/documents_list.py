@@ -26,7 +26,6 @@ def get_documents_list(
     - ページネーション対応（skip, limit）
     - ジャンル名・作成者名を含む
     - 取得結果をビュー数の降順、作成日の降順でソート
-    - 存在しないIDやステータスが指定された場合は 404
     """
     query = db.query(Document).options(
         joinedload(Document.genre),
@@ -35,18 +34,12 @@ def get_documents_list(
 
     if genre_id is not None:
         query = query.filter(Document.genre_id == genre_id)
-        # エラー処理: ジャンルIDが存在しない場合
-        if not db.query(Genre).filter(Genre.id == genre_id).first():
-            raise HTTPException(status_code=404, detail="指定されたジャンルIDは存在しません")
-
+ 
     if status is not None:
         query = query.filter(Document.status == status)
 
     documents = query.order_by(Document.view_count.desc(), Document.created_at.desc()).offset(skip).limit(limit).all()
 
-    # エラー処理: ドキュメントが見つからない場合
-    if not documents:
-        raise HTTPException(status_code=404, detail="該当するドキュメントが見つかりません")
 
     # ジャンル名と作成者名をレスポンスに追加
     result = []
