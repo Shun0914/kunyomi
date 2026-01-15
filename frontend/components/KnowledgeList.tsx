@@ -1,70 +1,73 @@
+'use client';
+
 import { useState, useEffect, useCallback } from 'react';
-import { Loader2 } from 'lucide-react';
-import { getDocuments } from '@/lib/api/documents';
+import { Loader2, SearchX } from 'lucide-react';
+import { getDocuments, searchDocuments } from '@/lib/api/documents';
 import { KnowledgeCard } from './KnowledgeCard';
 import type { Knowledge } from '@/types/knowledge';
 
 /**
- * ナレッジ一覧制御コンポーネント
- * * 役割:
- * 1. 外部API（getDocuments）を使用したデータの非同期取得
- * 2. 取得したデータの検索クエリによるフィルタリング（フロントエンド側）
- * 3. ローディング状態および「データなし」状態のUI管理
+ * プロパティの型定義
+ * @param selectedGenreId - サイドバーで選択されたジャンルのID（nullの場合は全ジャンル）
+ * @param searchQuery - 検索バーに入力された文字列
  */
 interface KnowledgeListProps {
-  selectedGenreId: number | null; // 親から渡されるフィルタ用ジャンルID
-  searchQuery: string;            // 親から渡される検索文字列
+  selectedGenreId: number | null;
+  searchQuery: string;
 }
 
+/**
+ * ナレッジ一覧表示コンポーネント
+ * 検索キーワードの有無に応じて、検索APIと通常の一覧APIを使い分けます。
+ */
 export function KnowledgeList({ selectedGenreId, searchQuery }: KnowledgeListProps) {
-  // --- ステート定義 ---
-  const [knowledges, setKnowledges] = useState<Knowledge[]>([]); // 取得した全データ（フィルタ前）
-  const [loading, setLoading] = useState(true);                  // 通信中フラグ
+  // 表示対象のナレッジリスト
+  const [knowledges, setKnowledges] = useState<Knowledge[]>([]);
+  // データ取得中の状態管理
+  const [loading, setLoading] = useState(true);
 
   /**
-   * APIからナレッジデータを取得する関数
-   * useCallbackにより、selectedGenreIdが変更されない限り関数インスタンスを保持
+   * APIからデータを取得するメインロジック
+   * useCallback を使用し、ジャンル選択や検索ワードの変化をトリガーに再生成します。
    */
   const fetchItems = useCallback(async () => {
     try {
       setLoading(true);
-      // APIクライアント経由でバックエンドから取得
-      const data = await getDocuments({
-        genre_id: selectedGenreId, // ジャンルによる絞り込みをサーバー側で実行
-        status: 'published',
-        skip: 0,
-        limit: 20
-      });
+      let data: Knowledge[];
+
+      // 【ロジック分岐】
+      // 1. 検索ワードがある場合: バックエンドの全文検索APIを使用
+      // 2. 検索ワードがない場合: ジャンル絞り込みを伴う一覧取得APIを使用
+      if (searchQuery.trim()) {
+        data = await searchDocuments(searchQuery);
+      } else {
+        data = await getDocuments({
+          genre_id: selectedGenreId,
+          status: 'published', // 公開済みドキュメントのみ取得
+          skip: 0,
+          limit: 20
+        });
+      }
+      
       setKnowledges(data || []);
     } catch (error) {
-      console.error("Failed to fetch:", error);
-      setKnowledges([]); // エラー時はリストを空にする
+      // API呼び出し失敗時のエラーハンドリング
+      console.error("Failed to fetch documents:", error);
+      setKnowledges([]); 
     } finally {
-      setLoading(false); // 成功・失敗に関わらずローディングを終了
+      setLoading(false);
     }
-  }, [selectedGenreId]); // ジャンルが切り替わるたびにこの関数を更新
+    // ジャンル変更または検索ワード入力のたびに fetchItems を再定義
+  }, [selectedGenreId, searchQuery]);
 
   /**
-   * コンポーネントのマウント時、および fetchItems 関数が更新された時に実行
+   * fetchItems が更新された際（selectedGenreId/searchQuery 変化時）に実行
    */
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
 
-  /**
-   * 検索クエリによるフィルタリング
-   * サーバーから取得済みの knowledges に対して、タイトルまたは内容で部分一致検索を行う
-   * searchQuery によるキーワード検索は、現在 メモリ上（クライアント側） で行っています。
-   * 別のチケットでここをAPIパラメータに含める対応を行います。by よこち
-   */
-  const filtered = knowledges.filter(k => 
-    k.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    k.content.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // --- レンダリングロジック ---
-
-  // ローディング中の表示
+  // --- ローディング中のUI表示 ---
   if (loading) {
     return (
       <div className="flex justify-center p-10">
@@ -73,23 +76,37 @@ export function KnowledgeList({ selectedGenreId, searchQuery }: KnowledgeListPro
     );
   }
 
-   return (
-    <div className="space-y-6"> {/* 全体を囲むdivを追加 */}
-      
-      {/* --- 件数表示ロジック --- */}
+  return (
+    <div className="space-y-6">
+      {/* 検索結果または一覧の状態を表示するヘッダーエリア */}
       <div className="flex justify-between items-center">
         <p className="text-sm text-slate-500 font-medium">
-          {loading ? '読み込み中...' : `${filtered.length} 件のナレッジ`}
+          {searchQuery ? (
+            <span>&quot;{searchQuery}&quot; の検索結果: </span>
+          ) : (
+            <span>ナレッジ一覧: </span>
+          )}
+          <span className="text-slate-900 ml-1">{knowledges.length} 件</span>
         </p>
       </div>
 
+      {/* ナレッジカードのレンダリングエリア */}
       <div className="grid gap-4 max-w-4xl">
-        {filtered.length === 0 ? (
-          <div className="text-center py-20 text-slate-400 border-2 border-dashed rounded-xl">
-            該当するナレッジが見つかりませんでした。
+        {knowledges.length === 0 ? (
+          /* データが0件の場合の空状態（Empty State）表示 */
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400 border-2 border-dashed rounded-xl space-y-2">
+            <SearchX className="h-8 w-8 text-slate-300" />
+            <p>
+              {searchQuery 
+                ? "キーワードに一致するナレッジが見つかりませんでした。" 
+                : "この条件で表示できるナレッジはありません。"}
+            </p>
           </div>
         ) : (
-          filtered.map(item => <KnowledgeCard key={item.id} data={item} />)
+          /* 取得したデータをループ展開 */
+          knowledges.map(item => (
+            <KnowledgeCard key={item.id} data={item} />
+          ))
         )}
       </div>
     </div>
