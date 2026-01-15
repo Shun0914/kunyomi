@@ -75,10 +75,17 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    # Azure Database for MySQLはSSL接続が必須のため、connect_argsでSSL設定を追加
+    connect_args = {}
+    if database_url and "mysql" in database_url:
+        connect_args = {"ssl": {"ca": None}}  # Azureが提供する証明書を使用
+    
+    engine_config = config.get_section(config.config_ini_section, {})
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        engine_config,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        connect_args=connect_args,
     )
 
     with connectable.connect() as connection:
