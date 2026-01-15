@@ -44,6 +44,7 @@ export interface Document {
   genre?: Genre;
 }
 
+
 /**
  * ドキュメント一覧API用の型（ジャンル名・作成者名を含む）
  * /api/documents_list エンドポイントのレスポンス用
@@ -115,7 +116,7 @@ export interface CreateDocumentRequest {
   genre_id: number;
   external_link?: string;
   status?: 'draft' | 'published' | 'archived';
-  keyword_ids?: number[];
+  keywords: string[];  // バックエンドはキーワード名の配列を受け取る
 }
 
 export interface UpdateDocumentRequest {
@@ -124,7 +125,7 @@ export interface UpdateDocumentRequest {
   genre_id?: number;
   external_link?: string;
   status?: 'draft' | 'published' | 'archived';
-  keyword_ids?: number[];
+  keywords: string[];  // バックエンドはキーワード名の配列を受け取る
 }
 
 export interface DocumentListResponse {

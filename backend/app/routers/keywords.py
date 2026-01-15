@@ -5,7 +5,8 @@ import unicodedata
 
 from app.db import get_db
 from app.models.keyword import Keyword
-from app.schemas.keyword import KeywordResponse
+from app.schemas.keyword import KeywordResponse, KeywordCreateRequest
+from datetime import datetime
 
 router = APIRouter(prefix="/api/keywords", tags=["keywords"])
 
@@ -39,3 +40,35 @@ def search_keywords(
         .order_by(Keyword.usage_count.desc())
         .all()
     )
+
+@router.post("", response_model=KeywordResponse, status_code=201)
+def create_keyword(
+    request: KeywordCreateRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    キーワードを作成
+    既存の場合は既存のものを返す
+    """
+    normalized_name = normalize_text(request.name)
+    
+    # 既存チェック
+    existing = db.query(Keyword).filter(
+        Keyword.normalized_name == normalized_name
+    ).first()
+    
+    if existing:
+        return existing
+    
+    # 新規作成
+    new_keyword = Keyword(
+        name=request.name.strip(),
+        normalized_name=normalized_name,
+        usage_count=0,
+        created_at=datetime.now()
+    )
+    db.add(new_keyword)
+    db.commit()
+    db.refresh(new_keyword)
+    
+    return new_keyword
