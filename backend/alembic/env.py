@@ -32,7 +32,7 @@ if config.config_file_name is not None:
 
 # モデルをインポートして、Base.metadataを設定
 from app.db import Base
-from app.models import User, Genre, Keyword, Document, DocumentKeyword  # モデルをインポート（autogenerate用）
+from app.models import User, Genre, Keyword, Document, DocumentKeyword, DocumentEvaluation  # モデルをインポート（autogenerate用）
 
 # add your model's MetaData object here
 # for 'autogenerate' support

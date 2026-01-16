@@ -68,3 +68,14 @@ jobs:
           app-name: 'tech0-gen-11-step3-2-py-54'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_363AE2B6907B4A989AA532EC8D7D1F81 }}
+      
+      - name: 'Run database migrations'
+        uses: azure/appservice-ssh-action@v2
+        with:
+          app-name: 'tech0-gen-11-step3-2-py-54'
+          slot-name: 'Production'
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_363AE2B6907B4A989AA532EC8D7D1F81 }}
+          commands: |
+            cd /home/site/wwwroot/backend
+            source antenv/bin/activate
+            alembic upgrade head
