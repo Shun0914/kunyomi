@@ -31,7 +31,6 @@ export function KnowledgeList({ selectedGenreId, searchQuery }: KnowledgeListPro
       // APIクライアント経由でバックエンドから取得
       const data = await getDocuments({
         genre_id: selectedGenreId, // ジャンルによる絞り込みをサーバー側で実行
-        status: 'published',
         skip: 0,
         limit: 20
       });
