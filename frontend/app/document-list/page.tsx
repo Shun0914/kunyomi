@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Search, BookOpen, Network, BarChart3, Bot, Plus, LogIn } from 'lucide-react';
+import Link from 'next/link'; 
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { GenreSelector } from '@/components/GenreSelector';
@@ -33,8 +34,10 @@ export default function DocumentListPage() {
         </div>
         <div className="flex items-center gap-3">
           <Button variant="ghost" className="gap-2"><LogIn size={18} /> ログイン</Button>
-          <Button className="bg-black text-white hover:bg-slate-800 gap-2">
-            <Plus size={18} /> 新規作成
+          <Button asChild className="bg-black text-white hover:bg-slate-800 gap-2">
+            <Link href="/document-create">
+              <Plus size={18} /> 新規作成
+            </Link>
           </Button>
         </div>
       </header>
