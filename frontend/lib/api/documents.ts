@@ -49,6 +49,21 @@ export async function getDocuments(
 }
 
 /**
+ * キーワードによるナレッジ検索
+ * @param query 検索クエリ文字列
+ * @returns 検索結果のナレッジ一覧
+ */
+export async function searchDocuments(query: string): Promise<Knowledge[]> {
+  if (!query) return [];
+  
+  // encodeURIComponent でスペースや特殊文字を安全に処理
+  const endpoint = `/api/documents/search?q=${encodeURIComponent(query)}`;
+  
+  // 共通クライアントの get を使用することで、ベースURLやエラーハンドリングを統一
+  return get<Knowledge[]>(endpoint);
+}
+
+/**
  * ドキュメント詳細を取得
  * @param id ドキュメントID
  * @returns ドキュメント詳細

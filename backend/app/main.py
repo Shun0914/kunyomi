@@ -1,21 +1,35 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
+from dotenv import load_dotenv
 from app.db import engine
 from app.routers import keywords, documents, genre, documents_list, documents_search
+
+# 環境変数を読み込む
+load_dotenv()
 
 app = FastAPI(
     title="くんよみ API",
     description="社内ナレッジ管理システムのAPI",
     version="0.1.0"
 )
+
+# CORS設定: 環境変数から許可するオリジンを取得
+# 開発環境: localhost:3000, 127.0.0.1:3000（デフォルト）
+# 本番環境: フロントエンドApp ServiceのURL（環境変数から取得）
+allowed_origins_env = os.getenv(
+    "ALLOWED_ORIGINS",
+    "http://localhost:3000,http://127.0.0.1:3000"  # デフォルト値（開発環境用）
+)
+
+# カンマ区切りで分割してリストに変換
+allowed_origins = [origin.strip() for origin in allowed_origins_env.split(",")]
+
 # CORSミドルウェアを追加（ルーター登録の前に配置）
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",      # Next.js開発サーバー
-        "http://127.0.0.1:3000",      # 127.0.0.1でもアクセス可能に
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],              # すべてのHTTPメソッドを許可
     allow_headers=["*"],              # すべてのヘッダーを許可

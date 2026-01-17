@@ -15,10 +15,16 @@ DATABASE_URL = os.getenv(
 )
 
 # SQLAlchemyエンジンを作成
+# Azure Database for MySQLはSSL接続が必須のため、SSL設定を追加
+connect_args = {}
+if "mysql" in DATABASE_URL.lower() and "azure" in DATABASE_URL.lower():
+    connect_args = {"ssl": {"ca": None}}  # Azureが提供する証明書を使用
+
 engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True,  # 接続の有効性をチェック
-    echo=False  # SQLクエリをログ出力するか（開発時はTrue推奨）
+    echo=False,  # SQLクエリをログ出力するか（開発時はTrue推奨）
+    connect_args=connect_args  # SSL接続設定
 )
 
 # セッション生成用のファクトリ

@@ -29,7 +29,8 @@ def get_documents_list(
     """
     query = db.query(Document).options(
         joinedload(Document.genre),
-        joinedload(Document.creator)  
+        joinedload(Document.creator),
+        joinedload(Document.keywords)
     )
 
     if genre_id is not None:
@@ -60,7 +61,9 @@ def get_documents_list(
             "helpful_count": document.helpful_count,
             "view_count": document.view_count,
             "helpfulness_score": document.helpfulness_score,
-            "keywords": []  # デフォルト値を空のリストに設定
+            "keywords": [
+                {"id": kw.id, "name": kw.name} for kw in document.keywords
+            ]
         })
 
     return result
