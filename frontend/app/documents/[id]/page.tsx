@@ -1,10 +1,10 @@
-import KnowledgeDetail from '@/components/KnowledgeDetail';
+import DocumentDetailClient from './DocumentDetailClient';
 
-export default async function Page({
+export default async function DocumentDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string }> | { id: string };
 }) {
-  const { id } = await params;
-  return <KnowledgeDetail id={id} />;
+  const resolvedParams = params instanceof Promise ? await params : params;
+  return <DocumentDetailClient id={resolvedParams.id} />;
 }

@@ -33,7 +33,25 @@ export default function KnowledgeDetail({ id }: Props) {
         const data = (await getDocument(Number(id))) as DocumentDetail;
         if (!cancelled) setDoc(data);
       } catch (e: any) {
-        if (!cancelled) setError(e?.message ?? 'Failed to fetch');
+  if (cancelled) return;
+
+  // Error / 文字列 / オブジェクト（APIエラーJSON）を全部ちゃんと表示する
+  const msg =
+    typeof e === 'string'
+      ? e
+      : e?.message
+      ? String(e.message)
+      : e?.detail
+      ? String(e.detail)
+      : (() => {
+          try {
+            return JSON.stringify(e);
+          } catch {
+            return String(e);
+          }
+        })();
+
+  setError(msg);
       } finally {
         if (!cancelled) setLoading(false);
       }
