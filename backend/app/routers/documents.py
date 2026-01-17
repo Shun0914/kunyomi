@@ -19,6 +19,11 @@ router = APIRouter(prefix="/api/documents", tags=["documents"])
 # 仮のユーザーID（認証機能がないため）
 TEMP_USER_ID = 1
 
+@router.get("/")
+def list_documents(db: Session = Depends(get_db)):
+    return db.query(Document).order_by(Document.id.desc()).all()
+
+
 @router.get("/{document_id}", response_model=DocumentDetailResponse)
 def get_document_detail(document_id: int, db: Session = Depends(get_db)):
     """
@@ -38,11 +43,21 @@ def get_document_detail(document_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Document not found")
 
     # 閲覧数インクリメント
-    doc.view_count += 1
-    db.commit()
-    db.refresh(doc)
+    #doc.view_count += 1
+    #db.commit()
+    #db.refresh(doc)
 
     return doc
+
+@router.post("/{document_id}/view", status_code=status.HTTP_204_NO_CONTENT)
+def increment_view_count(document_id: int, db: Session = Depends(get_db)):
+    doc = db.query(Document).filter(Document.id == document_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    doc.view_count += 1
+    db.commit()
+    return
 
 # ========== POSTエンドポイント ==========
 @router.post("/", response_model=DocumentCreateResponse, status_code=status.HTTP_201_CREATED)

@@ -22,12 +22,9 @@ export class ApiError extends Error {
 /**
  * APIリクエストの共通処理
  */
-async function fetchApi<T>(
-  endpoint: string,
-  options?: RequestInit
-): Promise<T> {
+async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
-  
+
   const defaultHeaders: HeadersInit = {
     'Content-Type': 'application/json',
   };
@@ -40,17 +37,19 @@ async function fetchApi<T>(
     },
   });
 
+  // ---- エラー時処理 ----
   if (!response.ok) {
     let errorMessage = `API request failed: ${response.status} ${response.statusText}`;
     let errorData: unknown;
 
     try {
+      // エラー時はJSONのことが多い
       errorData = await response.json();
       if (errorData && typeof errorData === 'object' && 'detail' in errorData) {
-        errorMessage = String(errorData.detail);
+        errorMessage = String((errorData as any).detail);
       }
     } catch {
-      // JSON解析に失敗した場合は、テキストとして取得を試みる
+      // JSONでなければtextを試す
       try {
         const text = await response.text();
         errorMessage = text || errorMessage;
@@ -62,22 +61,32 @@ async function fetchApi<T>(
     throw new ApiError(errorMessage, response.status, errorData);
   }
 
-  // レスポンスが空の場合はnullを返す
-  const contentType = response.headers.get('content-type');
-  if (!contentType || !contentType.includes('application/json')) {
-    return null as T;
+  // ---- 成功時処理 ----
+
+  // 204 No Content（例: /view）は本文が空なのでここで終了
+  if (response.status === 204) {
+    return undefined as T;
   }
 
-  return response.json();
+  // まず本文をテキストで取る（空ならundefined）
+  const text = await response.text();
+  if (!text) {
+    return undefined as T;
+  }
+
+  // JSON前提。JSONでなければエラーにする
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new ApiError('Invalid JSON response', response.status, text);
+  }
 }
 
 /**
  * GETリクエスト
  */
 export async function get<T>(endpoint: string): Promise<T> {
-  return fetchApi<T>(endpoint, {
-    method: 'GET',
-  });
+  return fetchApi<T>(endpoint, { method: 'GET' });
 }
 
 /**
@@ -114,8 +123,5 @@ export async function patch<T>(endpoint: string, data?: unknown): Promise<T> {
  * DELETEリクエスト
  */
 export async function del<T>(endpoint: string): Promise<T> {
-  return fetchApi<T>(endpoint, {
-    method: 'DELETE',
-  });
+  return fetchApi<T>(endpoint, { method: 'DELETE' });
 }
-

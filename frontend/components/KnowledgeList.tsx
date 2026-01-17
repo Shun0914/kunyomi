@@ -33,6 +33,7 @@ export function KnowledgeList({ selectedGenreId, searchQuery }: KnowledgeListPro
   const fetchItems = useCallback(async () => {
     try {
       setLoading(true);
+
       let data: Knowledge[];
 
       // 【ロジック分岐】
