@@ -105,8 +105,8 @@ export default function KnowledgeNetwork({
         // ドキュメント詳細へ遷移
         router.push(`/documents/${n.document_id}`);
       } else if (n.type === 'genre' && n.genre_id) {
-        // ジャンルフィルタを適用（例: ジャンル別一覧へ）
-        router.push(`/documents?genre=${n.genre_id}`);
+        // ジャンルフィルタを適用（document-listに遷移）
+        router.push(`/document-list?genre=${n.genre_id}`);
       }
     },
     [router]
