@@ -62,7 +62,7 @@ export default function KnowledgeNetwork({
   includeInactive = false,
 }: KnowledgeNetworkProps) {
   const router = useRouter();
-  const fgRef = useRef<ForceGraphMethods | null>(null);
+  const fgRef = useRef<ForceGraphMethods | undefined>(undefined);
   
   const [graphData, setGraphData] = useState<NetworkGraphData>({ nodes: [], links: [] });
   const [loading, setLoading] = useState(true);
