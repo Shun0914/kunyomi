@@ -21,7 +21,7 @@ export async function getGenres(includeInactive = false): Promise<Genre[]> {
   }
 
   const queryString = queryParams.toString();
-  const endpoint = `/api/genres${queryString ? `?${queryString}` : ''}`;
+  const endpoint = `/api/genres/${queryString ? `?${queryString}` : ''}`;
   
   return get<Genre[]>(endpoint);
 }
@@ -48,7 +48,7 @@ export async function getGenresFlat(options?: {
   }
 
   const queryString = queryParams.toString();
-  const endpoint = `/api/genres/flat${queryString ? `?${queryString}` : ''}`;
+  const endpoint = `/api/genres/flat/${queryString ? `?${queryString}` : ''}`;
   
   return get<Genre[]>(endpoint);
 }
