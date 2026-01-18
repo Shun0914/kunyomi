@@ -48,7 +48,7 @@ export async function getGenresFlat(options?: {
   }
 
   const queryString = queryParams.toString();
-  const endpoint = `/api/genres/flat/${queryString ? `?${queryString}` : ''}`;
+  const endpoint = `/api/genres/flat${queryString ? `?${queryString}` : ''}`;
   
   return get<Genre[]>(endpoint);
 }
