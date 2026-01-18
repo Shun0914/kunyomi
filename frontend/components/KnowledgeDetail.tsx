@@ -2,6 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { getDocument, incrementViewCount } from '@/lib/api/documents';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 type Props = { id: string };
 
@@ -82,7 +86,32 @@ export default function KnowledgeDetail({ id }: Props) {
     <div>
       <h1>{doc.title ?? `Document ${doc.id}`}</h1>
       {typeof doc.view_count === 'number' && <div>閲覧数: {doc.view_count}</div>}
-      <div style={{ whiteSpace: 'pre-wrap' }}>{doc.content ?? ''}</div>
+      <div className="prose dark:prose-invert max-w-none border-t pt-4">
+        <ReactMarkdown 
+          remarkPlugins={[remarkGfm]}
+          components={{
+            code({ node, inline, className, children, ...props }: any) {
+              const match = /language-(\w+)/.exec(className || '');
+              return !inline && match ? (
+                <SyntaxHighlighter
+                  {...props}
+                  style={vscDarkPlus}
+                  language={match[1]}
+                  PreTag="div"
+                >
+                  {String(children).replace(/\n$/, '')}
+                </SyntaxHighlighter>
+              ) : (
+                <code className={className} {...props}>
+                  {children}
+                </code>
+              );
+            }
+          }}
+        >
+          {doc.content ?? ''}
+        </ReactMarkdown>
+      </div>
     </div>
   );
 }
