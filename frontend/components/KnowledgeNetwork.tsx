@@ -62,7 +62,7 @@ export default function KnowledgeNetwork({
   includeInactive = false,
 }: KnowledgeNetworkProps) {
   const router = useRouter();
-  const fgRef = useRef<ForceGraphMethods | undefined>(undefined);
+  const fgRef = useRef<ForceGraphMethods>();
   
   const [graphData, setGraphData] = useState<NetworkGraphData>({ nodes: [], links: [] });
   const [loading, setLoading] = useState(true);
@@ -105,8 +105,8 @@ export default function KnowledgeNetwork({
         // ドキュメント詳細へ遷移
         router.push(`/documents/${n.document_id}`);
       } else if (n.type === 'genre' && n.genre_id) {
-        // ジャンルフィルタを適用（document-listに遷移）
-        router.push(`/document-list?genre=${n.genre_id}`);
+        // ジャンルフィルタを適用（例: ジャンル別一覧へ）
+        router.push(`/documents?genre=${n.genre_id}`);
       }
     },
     [router]
@@ -147,8 +147,17 @@ export default function KnowledgeNetwork({
       const isHighlight = highlightNodes.has(n.id);
       const isHover = hoverNode?.id === n.id;
 
-      // ノード円の半径（タイプによって変える）
-      const radius = n.type === 'genre' ? 6 : 4;
+      // ノード円の半径を計算
+      let radius: number;
+      if (n.type === 'genre') {
+        // ジャンルノード: ドキュメント数に応じてサイズを変更
+        const docCount = n.document_count || 0;
+        // 平方根スケールで滑らかに拡大（最小4、最大14）
+        radius = Math.min(14, 4 + Math.sqrt(docCount) * 1.5);
+      } else {
+        // ドキュメントノード: 固定サイズ
+        radius = 4;
+      }
       
       // ノード色（ジャンルはレベルに応じて色分け）
       const nodeColor = n.type === 'genre' 
@@ -236,12 +245,12 @@ export default function KnowledgeNetwork({
   return (
     <div className="relative w-full h-full bg-white">
       {/* コントロールボタン */}
-      <div className="absolute top-4 right-4 z-10 flex gap-2">
+      <div className="absolute top-3 right-3 z-10 flex gap-2">
         <button
           onClick={handleZoomToFit}
-          className="flex items-center gap-2 px-3 py-2 bg-slate-100 text-slate-700 text-sm rounded-md hover:bg-slate-200 transition-colors border border-slate-200"
+          className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 text-slate-700 text-xs rounded-md hover:bg-slate-200 transition-colors border border-slate-200 shadow-sm"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
           </svg>
           全体表示
@@ -250,14 +259,14 @@ export default function KnowledgeNetwork({
 
       {/* ホバー情報 */}
       {hoverNode && (
-        <div className="absolute top-4 left-4 z-10 bg-white p-3 rounded-md shadow-lg border border-slate-200">
-          <div className="text-slate-900 font-medium text-sm">{hoverNode.label}</div>
+        <div className="absolute top-3 left-3 z-10 bg-white p-2.5 rounded-md shadow-lg border border-slate-200">
+          <div className="text-slate-900 font-medium text-xs">{hoverNode.label}</div>
           {hoverNode.type === 'genre' ? (
             <div className="text-slate-600 text-xs mt-1">
               {hoverNode.document_count || 0}件のナレッジ
             </div>
           ) : (
-            <div className="text-slate-600 text-xs mt-2 space-y-1">
+            <div className="text-slate-600 text-xs mt-1.5 space-y-0.5">
               <div>閲覧: {hoverNode.view_count}回</div>
               <div>役立った: {hoverNode.helpful_count}回</div>
             </div>
