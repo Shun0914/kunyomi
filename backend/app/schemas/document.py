@@ -29,6 +29,10 @@ class DocumentDetailResponse(BaseModel):
         from_attributes = True
 
 
+class DocumentEvaluateRequest(BaseModel):
+    is_helpful: bool
+
+
 class DocumentCreateRequest(BaseModel):
     """ドキュメント作成リクエスト"""
     # Fieldには制約を一切つけない（すべてカスタムバリデーターで処理）
