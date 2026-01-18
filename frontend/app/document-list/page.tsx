@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Search, BookOpen, Network, BarChart3, Bot, Plus, LogIn } from 'lucide-react';
+import Link from 'next/link'; 
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { GenreSelector } from '@/components/GenreSelector';
@@ -12,15 +14,28 @@ import { KnowledgeList } from '@/components/KnowledgeList';
  * * 役割:
  * 1. ページ全体のレイアウト定義（ヘッダー、サイドバー、メインエリア）
  * 2. 子コンポーネント間で共有するフィルタリング状態（ジャンル、検索ワード）の管理
+ * 3. URLパラメータ（?genre=...）からのジャンルフィルタの適用
  */
 export default function DocumentListPage() {
+  const searchParams = useSearchParams();
+  
   // --- ステート管理 ---
   
   // 選択されたジャンルID（サイドバーのGenreSelectorから更新、KnowledgeListに渡してフィルタリング）
-  const [selectedGenreId, setSelectedGenreId] = useState<number | null>(null);
+  // URLパラメータ（?genre=...）から初期値を設定
+  const [selectedGenreId, setSelectedGenreId] = useState<number | null>(() => {
+    const genreParam = searchParams.get('genre');
+    return genreParam ? parseInt(genreParam, 10) : null;
+  });
   
   // 検索入力文字列（検索バーから更新、KnowledgeListに渡して絞り込み）
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // URLパラメータの変更を監視し、ジャンルIDを更新
+  useEffect(() => {
+    const genreParam = searchParams.get('genre');
+    setSelectedGenreId(genreParam ? parseInt(genreParam, 10) : null);
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
@@ -33,8 +48,10 @@ export default function DocumentListPage() {
         </div>
         <div className="flex items-center gap-3">
           <Button variant="ghost" className="gap-2"><LogIn size={18} /> ログイン</Button>
-          <Button className="bg-black text-white hover:bg-slate-800 gap-2">
-            <Plus size={18} /> 新規作成
+          <Button asChild className="bg-black text-white hover:bg-slate-800 gap-2">
+            <Link href="/document-create">
+              <Plus size={18} /> 新規作成
+            </Link>
           </Button>
         </div>
       </header>
