@@ -5,6 +5,7 @@ from sqlalchemy import text
 from dotenv import load_dotenv
 from app.db import engine
 from app.routers import keywords, documents, genre, documents_list, documents_search
+from app.routers import qas
 
 # 環境変数を読み込む
 load_dotenv()
@@ -41,7 +42,7 @@ app.include_router(keywords.router)
 app.include_router(documents_search.router)
 app.include_router(documents.router)
 app.include_router(documents_list.router)
-
+app.include_router(qas.router)
 
 @app.get("/")
 def read_root():
