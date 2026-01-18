@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Search, BookOpen, Network, BarChart3, Bot, Plus, LogIn } from 'lucide-react';
 import Link from 'next/link'; 
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { GenreSelector } from '@/components/GenreSelector';
 import { KnowledgeList } from '@/components/KnowledgeList';
+import KnowledgeNetwork from '@/components/KnowledgeNetwork';
 
 /**
  * ドキュメント一覧画面（ナレッジベース）メインコンポーネント
@@ -58,7 +59,7 @@ export default function DocumentListPage() {
 
       <div className="flex">
         {/* サイドバー：ジャンル選択によるフィルタリング */}
-        <aside className="w-64 border-r min-h-[calc(100vh-65px)] bg-white sticky top-[65px]">
+        <aside className="w-64 shrink-0 border-r min-h-[calc(100vh-65px)] bg-white sticky top-[65px]">
           <GenreSelector 
             selectedGenreId={selectedGenreId} 
             onSelectGenre={setSelectedGenreId} 
@@ -66,7 +67,7 @@ export default function DocumentListPage() {
         </aside>
 
         {/* メインエリア：タブ切り替えとコンテンツ表示 */}
-        <main className="flex-1 bg-slate-50/50 p-4 md:p-8">
+        <main className="flex-1 min-w-0 w-full bg-slate-50/50 p-4 md:p-8">
           <Tabs defaultValue="knowledge" className="w-full">
             {/* ナビゲーションタブ：将来的に各分析画面やAI検索機能へ拡張予定 */}
             <TabsList className="bg-slate-200/50 p-1 mb-8">
@@ -79,7 +80,7 @@ export default function DocumentListPage() {
             {/* ナレッジ一覧タブの内容 */}
             <TabsContent value="knowledge" className="space-y-6">
               {/* テキスト入力による動的検索バー */}
-              <div className="relative max-w-4xl">
+              <div className="relative max-w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                 <input 
                   type="text"
@@ -93,10 +94,32 @@ export default function DocumentListPage() {
               {/* ナレッジ一覧表示コンポーネント
                   propsとしてフィルタリング用のステートを渡し、内部でAPI通信と表示を実行
               */}
-              <KnowledgeList 
-                selectedGenreId={selectedGenreId} 
-                searchQuery={searchQuery} 
-              />
+              <div className="w-full"> {/* 親要素で幅を広げる */}
+                <KnowledgeList 
+                  selectedGenreId={selectedGenreId} 
+                  searchQuery={searchQuery} 
+                />
+              </div>
+            </TabsContent>
+            {/* --- ネットワークタブの内容--- */}
+            <TabsContent value="network" className="space-y-6">
+              <div className="max-w-full">
+                <h2 className="text-xl font-bold text-slate-900">ナレッジネットワーク</h2>
+                <p className="text-sm text-slate-600">
+                  関連性を視覚化しています。ドラッグで移動、スクロールでズームできます。
+                </p>
+              </div>
+              
+              <div className="w-full bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden" style={{ height: 'calc(100vh - 280px)' }}>
+                <Suspense fallback={
+                  <div className="flex items-center justify-center h-full text-slate-400">
+                    ネットワークを読み込み中...
+                  </div>
+                }>
+                  {/* 必要に応じてここにも props (selectedGenreId等) を渡せます */}
+                  <KnowledgeNetwork />
+                </Suspense>
+              </div>
             </TabsContent>
           </Tabs>
         </main>

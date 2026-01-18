@@ -92,7 +92,7 @@ export function KnowledgeList({ selectedGenreId, searchQuery }: KnowledgeListPro
       </div>
 
       {/* ナレッジカードのレンダリングエリア */}
-      <div className="grid gap-4 max-w-4xl">
+      <div className="grid gap-4 max-w-full">
         {knowledges.length === 0 ? (
           /* データが0件の場合の空状態（Empty State）表示 */
           <div className="flex flex-col items-center justify-center py-20 text-slate-400 border-2 border-dashed rounded-xl space-y-2">
