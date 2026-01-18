@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+from app.models.document_evaluation import DocumentEvaluation
 from datetime import datetime
 
 from app.db import get_db
@@ -11,7 +13,9 @@ from app.models.genre import Genre
 from app.schemas.document import (
     DocumentDetailResponse, 
     DocumentCreateRequest,
-    DocumentCreateResponse)
+    DocumentCreateResponse,
+    DocumentEvaluateRequest,
+    )
 from app.routers.keywords import normalize_text
 
 router = APIRouter(prefix="/api/documents", tags=["documents"])
@@ -56,8 +60,77 @@ def increment_view_count(document_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Document not found")
 
     doc.view_count += 1
+    denominator = max(doc.view_count, 1)
+    doc.helpfulness_score = round(doc.helpful_count / denominator, 2)
+
     db.commit()
     return
+
+@router.post("/{document_id}/evaluate", response_model=DocumentDetailResponse)
+def evaluate_document(
+    document_id: int,
+    request: DocumentEvaluateRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    ドキュメント評価:
+    - リクエスト { "is_helpful": true/false }
+    - 1ユーザー1ドキュメントにつき1回まで（重複は409）
+    - Document.helpful_count と Document.helpfulness_score を即時更新
+    """
+    # 1) ドキュメント存在確認（keywordsも返せるように）
+    doc = (
+        db.query(Document)
+        .options(joinedload(Document.keywords))
+        .filter(Document.id == document_id)
+        .first()
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    # 2) 既存評価チェック（重複防止）
+    existing = (
+        db.query(DocumentEvaluation)
+        .filter(
+            DocumentEvaluation.document_id == document_id,
+            DocumentEvaluation.user_id == TEMP_USER_ID,
+        )
+        .first()
+    )
+    if existing:
+        raise HTTPException(status_code=409, detail="Already evaluated")
+
+    # 3) 評価レコード作成
+    evaluation = DocumentEvaluation(
+        document_id=document_id,
+        user_id=TEMP_USER_ID,
+        is_helpful=request.is_helpful,
+    )
+    db.add(evaluation)
+
+    # 4) 集計更新（役立った=true のときだけカウント）
+    if request.is_helpful:
+        doc.helpful_count += 1
+
+    denominator = max(doc.view_count, 1)
+    doc.helpfulness_score = round(doc.helpful_count / denominator, 2)
+
+    # 5) 保存（unique違反は409へ）
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Already evaluated")
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to evaluate document: {str(e)}",
+        )
+
+    db.refresh(doc)
+    return doc
+
 
 # ========== POSTエンドポイント ==========
 @router.post("/", response_model=DocumentCreateResponse, status_code=status.HTTP_201_CREATED)
