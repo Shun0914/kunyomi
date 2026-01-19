@@ -6,10 +6,9 @@ from typing import List
 from app.db import get_db
 from app.models.qa import QA, QAStatus
 from app.models.document import Document
+from app.models.user import User
 from app.schemas.qa import QAResponse, QACreateRequest, QAAnswerRequest
 
-# NOTE: ドキュメント詳細画面内での利用を想定し、ドキュメントリソースの下にQAを配置する階層構造に変更
-# prefixは各エンドポイントで明示的に定義（/api/documents/{id}/qas と /api/qas/{id} が混在するため）
 router = APIRouter(tags=["qas"])
 
 # 仮のユーザーID（認証機能実装までの暫定措置）
@@ -18,24 +17,48 @@ TEMP_USER_ID = 1
 # ========== GET: QA取得系 ==========
 
 @router.get("/api/documents/{document_id}/qas", response_model=List[QAResponse])
-def get_qas_by_document(document_id: int, db: Session = Depends(get_db)):
+def read_qas(document_id: int, db: Session = Depends(get_db)):
     """
-    特定のドキュメントに関連付けられたQA一覧を取得します。
-    フロントエンドのドキュメント詳細画面下部での表示に使用します。
+    指定されたドキュメントに紐づくQA一覧を取得します。
+    UX向上のため、常に最新の質問がリストの最上部に表示されるよう降順でソートします。
     """
-    # 新着順（created_at desc）で取得
-    qas = db.query(QA).filter(QA.document_id == document_id).order_by(QA.created_at.desc()).all()
+    # .order_by(QA.created_at.desc()) により最新の投稿をトップに配置
+    qas = db.query(QA)\
+            .filter(QA.document_id == document_id)\
+            .order_by(QA.created_at.desc())\
+            .all()
+    
+    # NOTE: パフォーマンス最適化（JOIN/N+1問題）の検討材料として、
+    # 各QAごとにUserテーブルへクエリを発行して名前を取得しています。
+    for qa in qas:
+        # 質問者情報の補完
+        q_user = db.query(User).filter(User.id == qa.question_user_id).first()
+        qa.question_user_name = q_user.name if q_user else "匿名ユーザー"
+        
+        # 回答者情報の補完（回答が存在する場合のみ）
+        if qa.answer_user_id:
+            a_user = db.query(User).filter(User.id == qa.answer_user_id).first()
+            qa.answer_user_name = a_user.name if a_user else "回答担当者"
+            
     return qas
 
 @router.get("/api/qas/{qa_id}", response_model=QAResponse)
 def get_qa_detail(qa_id: int, db: Session = Depends(get_db)):
     """
-    QAの個別詳細を取得します。
-    特定の質問へのダイレクトリンクや、通知からの遷移を想定しています。
+    特定のQA詳細をユーザー名情報を含めて取得します。
     """
     qa = db.query(QA).filter(QA.id == qa_id).first()
     if not qa:
         raise HTTPException(status_code=404, detail="QAが見つかりませんでした")
+    
+    # レスポンス用にユーザー名を補完
+    q_user = db.query(User).filter(User.id == qa.question_user_id).first()
+    qa.question_user_name = q_user.name if q_user else "匿名ユーザー"
+    
+    if qa.answer_user_id:
+        a_user = db.query(User).filter(User.id == qa.answer_user_id).first()
+        qa.answer_user_name = a_user.name if a_user else "回答担当者"
+        
     return qa
 
 # ========== POST: 質問(Q)の登録 ==========
@@ -43,11 +66,9 @@ def get_qa_detail(qa_id: int, db: Session = Depends(get_db)):
 @router.post("/api/documents/{document_id}/qas", response_model=QAResponse, status_code=status.HTTP_201_CREATED)
 def create_question(document_id: int, request: QACreateRequest, db: Session = Depends(get_db)):
     """
-    ドキュメントに対して新しい質問を投稿します。
-    - パスパラメータ: document_id（どのドキュメントに対する質問か）
-    - ボディ: question_text（質問内容）
+    ドキュメントに対する新規質問を登録します。
     """
-    # 1. 対象ドキュメントの存在確認（不整合なデータの登録を防止）
+    # 不整合防止：ドキュメントの存在を確認
     doc = db.query(Document).filter(Document.id == document_id).first()
     if not doc:
         raise HTTPException(
@@ -57,10 +78,10 @@ def create_question(document_id: int, request: QACreateRequest, db: Session = De
 
     try:
         new_qa = QA(
-            document_id=document_id, # パスパラメータから紐付けを担保
+            document_id=document_id,
             question_user_id=TEMP_USER_ID,
             question_text=request.question_text,
-            status=QAStatus.PENDING, # 初期状態は「回答待ち」
+            status=QAStatus.PENDING,
             is_faq=False,
             created_at=datetime.now()
         )
@@ -80,10 +101,7 @@ def create_question(document_id: int, request: QACreateRequest, db: Session = De
 @router.put("/api/qas/{qa_id}/answer", response_model=QAResponse)
 def submit_answer(qa_id: int, request: QAAnswerRequest, db: Session = Depends(get_db)):
     """
-    既存の質問に対して回答を登録します。
-    - ステータスを 'answered' に変更
-    - 回答者IDと回答日時を自動記録
-    - is_faq フラグの更新にも対応
+    既存の質問に回答を登録し、ステータスを「回答済み」に更新します。
     """
     qa = db.query(QA).filter(QA.id == qa_id).first()
     if not qa:
@@ -95,7 +113,7 @@ def submit_answer(qa_id: int, request: QAAnswerRequest, db: Session = Depends(ge
         qa.status = QAStatus.ANSWERED
         qa.answered_at = datetime.now()
         
-        # クライアントから明示的に指定がある場合のみ更新
+        # リクエストにFAQ設定が含まれる場合のみ上書き
         if request.is_faq is not None:
             qa.is_faq = request.is_faq
 
