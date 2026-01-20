@@ -17,49 +17,43 @@ const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
   ),
 });
 
-// 配色定義（画像の青・グレー系、レベルによる色分け）
+// 配色定義
 const COLORS = {
-  bg: '#FFFFFF', // 背景（白）
-  // ジャンルノード（レベルによる色分け：紺 → 青 → 明るい青）
-  genreLevel1: '#1E3A8A', // Lv1: 紺
-  genreLevel2: '#1D4ED8', // Lv2: 濃い青
-  genreLevel3: '#3B82F6', // Lv3: 青
-  genreLevel4: '#60A5FA', // Lv4: 明るい青
-  genreLevel5: '#93C5FD', // Lv5: 最も明るい青
-  documentNode: '#6B7280', // ドキュメントノード（グレー）
-  genreLink: '#1E40AF', // ジャンル階層リンク（濃い青）
-  docLink: '#D1D5DB', // ドキュメントリンク（薄いグレー）
-  text: '#111827', // テキスト（濃いグレー）
-  highlight: '#3B82F6', // ハイライト（青）
-  hoverBg: '#FFFFFF', // ホバー背景（白）
+  bg: '#FFFFFF',
+  genreLevel1: '#1E3A8A',
+  genreLevel2: '#1D4ED8',
+  genreLevel3: '#3B82F6',
+  genreLevel4: '#60A5FA',
+  genreLevel5: '#93C5FD',
+  documentNode: '#6B7280',
+  genreLink: '#1E40AF',
+  docLink: '#D1D5DB',
+  text: '#111827',
+  highlight: '#3B82F6',
+  hoverBg: '#FFFFFF',
 };
 
-// ジャンルレベルに応じた色を取得
 const getGenreColor = (level?: number): string => {
   switch (level) {
-    case 1:
-      return COLORS.genreLevel1;
-    case 2:
-      return COLORS.genreLevel2;
-    case 3:
-      return COLORS.genreLevel3;
-    case 4:
-      return COLORS.genreLevel4;
-    case 5:
-      return COLORS.genreLevel5;
-    default:
-      return COLORS.genreLevel3; // デフォルトは青
+    case 1: return COLORS.genreLevel1;
+    case 2: return COLORS.genreLevel2;
+    case 3: return COLORS.genreLevel3;
+    case 4: return COLORS.genreLevel4;
+    case 5: return COLORS.genreLevel5;
+    default: return COLORS.genreLevel3;
   }
 };
 
 interface KnowledgeNetworkProps {
   genreId?: number;
   includeInactive?: boolean;
+  onGenreSelect?: (genreId: number | null) => void;
 }
 
 export default function KnowledgeNetwork({
   genreId,
   includeInactive = false,
+  onGenreSelect,
 }: KnowledgeNetworkProps) {
   const router = useRouter();
   const fgRef = useRef<ForceGraphMethods>();
@@ -73,8 +67,8 @@ export default function KnowledgeNetwork({
   const [hoverNode, setHoverNode] = useState<NetworkNode | null>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [isSimulationComplete, setIsSimulationComplete] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true); // 初回ロードフラグ
-  const hasConfiguredForces = useRef(false); // 力の設定フラグ
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const hasConfiguredForces = useRef(false);
 
   // コンテナサイズを取得・監視
   useEffect(() => {
@@ -84,19 +78,12 @@ export default function KnowledgeNetwork({
         setDimensions({ width, height });
       }
     };
-
-    // 初期サイズ取得
     updateDimensions();
-
-    // ResizeObserverで監視
     const resizeObserver = new ResizeObserver(updateDimensions);
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current);
     }
-
-    // ウィンドウリサイズも監視
     window.addEventListener('resize', updateDimensions);
-
     return () => {
       resizeObserver.disconnect();
       window.removeEventListener('resize', updateDimensions);
@@ -109,17 +96,11 @@ export default function KnowledgeNetwork({
       try {
         setLoading(true);
         setIsSimulationComplete(false);
-        hasConfiguredForces.current = false; // リセット
+        hasConfiguredForces.current = false;
         const data = await getNetworkGraph({ genreId, includeInactive });
         setGraphData(data);
         setError(null);
-        
-        // 初回ロードフラグをセット（ジャンル選択時はfalse）
-        if (genreId === undefined) {
-          setIsInitialLoad(true);
-        } else {
-          setIsInitialLoad(false);
-        }
+        setIsInitialLoad(genreId === undefined);
       } catch (err) {
         setError('ネットワークグラフの読み込みに失敗しました');
         console.error(err);
@@ -127,7 +108,6 @@ export default function KnowledgeNetwork({
         setLoading(false);
       }
     };
-
     fetchData();
   }, [genreId, includeInactive]);
 
@@ -135,8 +115,6 @@ export default function KnowledgeNetwork({
   useEffect(() => {
     if (fgRef.current && graphData.nodes.length > 0 && !hasConfiguredForces.current) {
       const fg = fgRef.current;
-      
-      // ノードの初期位置をCanvas内にランダム配置
       graphData.nodes.forEach((node: any) => {
         const spreadRadius = Math.min(dimensions.width, dimensions.height) * 0.35;
         node.x = (Math.random() - 0.5) * spreadRadius;
@@ -144,42 +122,25 @@ export default function KnowledgeNetwork({
         node.vx = 0;
         node.vy = 0;
       });
-      
-      // center力を追加（ノードを中心(0,0)に引き寄せる）
       fg.d3Force('center', fg.d3Force('center')?.strength(0.05));
-      
-      // charge力を調整（ノード間の反発力）
       fg.d3Force('charge', fg.d3Force('charge')?.strength(-100));
-      
-      // 初期ズームレベルを設定（固定）
       fg.zoom(1.5, 0);
       fg.centerAt(0, 0, 0);
-      
       hasConfiguredForces.current = true;
-      console.log('D3-force設定完了 - 初期配置を Canvas内にランダム生成');
     }
   }, [graphData.nodes, dimensions.width, dimensions.height]);
 
-  // グラフをフィット（中央配置）
   const handleZoomToFit = useCallback(() => {
     if (fgRef.current && graphData.nodes.length > 0) {
-      // パディング150pxで全体表示
       fgRef.current.zoomToFit(400, 150);
     }
   }, [graphData.nodes.length]);
 
-  // シミュレーション完了時の処理
   const handleEngineStop = useCallback(() => {
     if (!isSimulationComplete) {
-      console.log('シミュレーション完了', { isInitialLoad, genreId });
       setIsSimulationComplete(true);
-      
-      // 初回ロード時は視点を固定（zoomToFitしない）
-      // ジャンル選択時も現在のズームレベルを維持
-      // 全体表示はユーザーが手動でボタンを押した時のみ
-      console.log('視点固定 - 自然な配置完了');
     }
-  }, [isSimulationComplete, isInitialLoad, genreId]);
+  }, [isSimulationComplete]);
 
   // ノードクリック処理
   const handleNodeClick = useCallback(
@@ -189,14 +150,16 @@ export default function KnowledgeNetwork({
         // ドキュメント詳細へ遷移
         router.push(`/documents/${n.document_id}`);
       } else if (n.type === 'genre' && n.genre_id) {
-        // ジャンルフィルタを適用（例: ジャンル別一覧へ）
-        router.push(`/document-list?genre=${n.genre_id}`);
+        // ジャンルフィルタを適用（親コンポーネントに通知）
+        if (onGenreSelect) {
+          onGenreSelect(n.genre_id);
+        }
       }
     },
-    [router]
+    [router, onGenreSelect]
   );
 
-  // ノードホバー処理（関連ノード・リンクをハイライト）
+  // ノードホバー処理
   const handleNodeHover = useCallback((node: NodeObject | null) => {
     if (!node) {
       setHighlightNodes(new Set());
@@ -204,14 +167,10 @@ export default function KnowledgeNetwork({
       setHoverNode(null);
       return;
     }
-
     const n = node as NetworkNode;
     setHoverNode(n);
-
-    // 関連ノード・リンクを抽出
     const nodes = new Set<string>([n.id]);
     const links = new Set<string>();
-
     graphData.links.forEach((link) => {
       if (link.source === n.id || link.target === n.id) {
         links.add(`${link.source}-${link.target}`);
@@ -219,64 +178,44 @@ export default function KnowledgeNetwork({
         nodes.add(typeof link.target === 'string' ? link.target : (link.target as any).id);
       }
     });
-
     setHighlightNodes(nodes);
     setHighlightLinks(links);
   }, [graphData.links]);
 
-  // ノード描画カスタマイズ
+  // ノード描画
   const paintNode = useCallback(
     (node: NodeObject, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const n = node as NetworkNode;
       const isHighlight = highlightNodes.has(n.id);
       const isHover = hoverNode?.id === n.id;
-
-      // ノード円の半径を計算
       let radius: number;
       if (n.type === 'genre') {
-        // ジャンルノード: ドキュメント数に応じてサイズを変更
         const docCount = n.document_count || 0;
-        // 平方根スケールで滑らかに拡大（最小4、最大14）
         radius = Math.min(14, 4 + Math.sqrt(docCount) * 1.5);
       } else {
-        // ドキュメントノード: 固定サイズ
         radius = 4;
       }
-      
-      // ノード色（ジャンルはレベルに応じて色分け）
-      const nodeColor = n.type === 'genre' 
-        ? getGenreColor(n.level) 
-        : COLORS.documentNode;
+      const nodeColor = n.type === 'genre' ? getGenreColor(n.level) : COLORS.documentNode;
       const finalColor = isHighlight || isHover ? COLORS.highlight : nodeColor;
-
-      // 円描画
       ctx.beginPath();
       ctx.arc(node.x!, node.y!, radius, 0, 2 * Math.PI);
       ctx.fillStyle = finalColor;
       ctx.fill();
-
-      // ハイライト時は外枠追加
       if (isHighlight || isHover) {
         ctx.strokeStyle = COLORS.highlight;
         ctx.lineWidth = 1.5;
         ctx.stroke();
       }
-
-      // ラベル描画条件
       let shouldShowLabel = false;
-      
       if (n.type === 'genre') {
-        // ジャンルLv1は常に表示、Lv2以降はズーム時またはハイライト時のみ
         if (n.level === 1) {
           shouldShowLabel = true;
         } else {
           shouldShowLabel = globalScale >= 1.5 || isHighlight || isHover;
         }
       } else {
-        // ドキュメントはズーム時またはハイライト時のみ
         shouldShowLabel = globalScale >= 1.5 || isHighlight || isHover;
       }
-      
       if (shouldShowLabel) {
         ctx.font = `${12 / globalScale}px Sans-Serif`;
         ctx.textAlign = 'center';
@@ -288,19 +227,15 @@ export default function KnowledgeNetwork({
     [highlightNodes, hoverNode]
   );
 
-  // リンク描画カスタマイズ
+  // リンク描画
   const paintLink = useCallback(
     (link: LinkObject, ctx: CanvasRenderingContext2D) => {
       const l = link as any;
       const isHighlight = highlightLinks.has(`${l.source.id}-${l.target.id}`);
-
-      // リンク色・太さ
       const linkColor = l.type === 'genre_hierarchy' ? COLORS.genreLink : COLORS.docLink;
       ctx.strokeStyle = isHighlight ? COLORS.highlight : linkColor;
       ctx.lineWidth = isHighlight ? 2 : 1;
-      ctx.globalAlpha = isHighlight ? 1 : 0.3; // 非ハイライト時はより薄く
-
-      // 線描画
+      ctx.globalAlpha = isHighlight ? 1 : 0.3;
       ctx.beginPath();
       ctx.moveTo(l.source.x, l.source.y);
       ctx.lineTo(l.target.x, l.target.y);
@@ -328,7 +263,6 @@ export default function KnowledgeNetwork({
 
   return (
     <div ref={containerRef} className="relative w-full h-full bg-white">
-      {/* コントロールボタン */}
       <div className="absolute top-4 right-4 z-10 flex gap-2">
         <button
           onClick={handleZoomToFit}
@@ -340,8 +274,6 @@ export default function KnowledgeNetwork({
           全体表示
         </button>
       </div>
-
-      {/* ホバー情報 */}
       {hoverNode && (
         <div className="absolute top-4 left-4 z-10 bg-white p-3 rounded-md shadow-lg border border-slate-200">
           <div className="text-slate-900 font-medium text-sm">{hoverNode.label}</div>
@@ -357,8 +289,6 @@ export default function KnowledgeNetwork({
           )}
         </div>
       )}
-
-      {/* グラフ本体 */}
       <ForceGraph2D
         ref={fgRef}
         graphData={graphData}
@@ -376,7 +306,6 @@ export default function KnowledgeNetwork({
         d3VelocityDecay={0.4}
         d3AlphaMin={0.001}
         warmupTicks={0}
-        // cooldownTicks={30}
         enableZoomInteraction={true}
         enablePanInteraction={true}
       />

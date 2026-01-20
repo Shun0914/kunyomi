@@ -1,129 +1,177 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Search, BookOpen, Network, BarChart3, Bot, Plus, LogIn } from 'lucide-react';
-import Link from 'next/link'; 
+import { Search, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { GenreSelector } from '@/components/GenreSelector';
+import { AppLayout, TabType, ViewMode } from '@/components/AppLayout';
 import { KnowledgeList } from '@/components/KnowledgeList';
+import { KnowledgeForm } from '@/components/KnowledgeForm';
 import KnowledgeNetwork from '@/components/KnowledgeNetwork';
+import { getPopularKeywords } from '@/lib/api';
+import type { Keyword } from '@/types/knowledge';
 
-/**
- * ドキュメント一覧画面（ナレッジベース）メインコンポーネント
- * * 役割:
- * 1. ページ全体のレイアウト定義（ヘッダー、サイドバー、メインエリア）
- * 2. 子コンポーネント間で共有するフィルタリング状態（ジャンル、検索ワード）の管理
- * 3. URLパラメータ（?genre=...）からのジャンルフィルタの適用
- */
 export default function DocumentListPage() {
   const searchParams = useSearchParams();
-  
-  // --- ステート管理 ---
-  
-  // 選択されたジャンルID（サイドバーのGenreSelectorから更新、KnowledgeListに渡してフィルタリング）
-  // URLパラメータ（?genre=...）から初期値を設定
+
+  // タブの状態管理
+  const [activeTab, setActiveTab] = useState<TabType>('knowledge');
+
+  // 表示モードの状態管理（一覧 or 作成）
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+
+  // ジャンル選択の状態管理
   const [selectedGenreId, setSelectedGenreId] = useState<number | null>(() => {
     const genreParam = searchParams.get('genre');
     return genreParam ? parseInt(genreParam, 10) : null;
   });
-  
-  // 検索入力文字列（検索バーから更新、KnowledgeListに渡して絞り込み）
+
+  // 検索クエリの状態管理
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // URLパラメータの変更を監視し、ジャンルIDを更新
+
+  // 作成フォーム用のキーワード
+  const [keywords, setKeywords] = useState<Keyword[]>([]);
+  const [keywordsLoading, setKeywordsLoading] = useState(false);
+  const [keywordsError, setKeywordsError] = useState<string | null>(null);
+
+  // URLパラメータの変更を監視
   useEffect(() => {
     const genreParam = searchParams.get('genre');
     setSelectedGenreId(genreParam ? parseInt(genreParam, 10) : null);
   }, [searchParams]);
 
+  // 作成モードに切り替わったときにキーワードを取得
+  useEffect(() => {
+    if (viewMode === 'create' && keywords.length === 0 && !keywordsLoading) {
+      const fetchKeywords = async () => {
+        try {
+          setKeywordsLoading(true);
+          const data = await getPopularKeywords(20);
+          setKeywords(data);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : 'キーワードの取得に失敗しました';
+          setKeywordsError(msg);
+        } finally {
+          setKeywordsLoading(false);
+        }
+      };
+      fetchKeywords();
+    }
+  }, [viewMode, keywords.length, keywordsLoading]);
+
+  // タブごとのコンテンツを描画
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'knowledge':
+        // 作成モードの場合
+        if (viewMode === 'create') {
+          if (keywordsLoading) {
+            return (
+              <div className="flex flex-col items-center justify-center py-20 max-w-4xl">
+                <Loader2 className="animate-spin text-blue-500 mb-4" size={32} />
+                <p className="text-slate-500">読み込み中...</p>
+              </div>
+            );
+          }
+          if (keywordsError) {
+            return (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center max-w-4xl">
+                <p className="text-red-600 mb-4">{keywordsError}</p>
+                <Button onClick={() => window.location.reload()} variant="destructive">
+                  再読み込み
+                </Button>
+              </div>
+            );
+          }
+          return (
+            <div className="max-w-4xl">
+              <KnowledgeForm 
+                availableKeywords={keywords}
+                onCancel={() => setViewMode('list')}
+              />
+            </div>
+          );
+        }
+
+        // 一覧モードの場合
+        return (
+          <>
+            {/* 検索バー */}
+            <div className="relative max-w-4xl">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+              <input
+                type="text"
+                placeholder="ナレッジを検索..."
+                className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            {/* ナレッジ一覧 */}
+            <KnowledgeList
+              selectedGenreId={selectedGenreId}
+              searchQuery={searchQuery}
+            />
+          </>
+        );
+
+      case 'network':
+        return (
+          <>
+            {/* 説明エリア */}
+            <div className="max-w-4xl">
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">ナレッジネットワーク</h2>
+              <p className="text-sm text-slate-600">
+                ナレッジ間の関連性を視覚化しています。ノードをクリックして詳細を表示できます。
+              </p>
+            </div>
+
+            {/* ネットワークグラフ表示コンポーネント */}
+            <div className="max-w-4xl">
+              <div 
+                className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden" 
+                style={{ height: 'calc(100vh - 340px)', minHeight: '500px' }}
+              >
+                <KnowledgeNetwork 
+                  genreId={selectedGenreId || undefined} 
+                  onGenreSelect={setSelectedGenreId}
+                />
+              </div>
+            </div>
+          </>
+        );
+
+      case 'analytics':
+        return (
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400 border-2 border-dashed rounded-xl">
+            <p className="text-lg font-medium mb-2">分析ダッシュボード</p>
+            <p className="text-sm">ナレッジの統計情報を表示します（開発中）</p>
+          </div>
+        );
+
+      case 'ai-search':
+        return (
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400 border-2 border-dashed rounded-xl">
+            <p className="text-lg font-medium mb-2">AI検索</p>
+            <p className="text-sm">AIによる高度な検索機能を提供します（開発中）</p>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-white text-slate-900">
-      
-      {/* 共通ヘッダー：サービスロゴとアクションボタン */}
-      <header className="flex items-center justify-between px-6 py-3 border-b sticky top-0 bg-white z-20">
-        <div className="flex items-center gap-2">
-          <BookOpen className="text-blue-600" size={32} />
-          <h1 className="text-xl font-bold tracking-tight">ナレッジベース</h1>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" className="gap-2"><LogIn size={18} /> ログイン</Button>
-          <Button asChild className="bg-black text-white hover:bg-slate-800 gap-2">
-            <Link href="/document-create">
-              <Plus size={18} /> 新規作成
-            </Link>
-          </Button>
-        </div>
-      </header>
-
-      <div className="flex">
-        {/* サイドバー：ジャンル選択によるフィルタリング */}
-        <aside className="w-64 shrink-0 border-r min-h-[calc(100vh-65px)] bg-white sticky top-[65px]">
-          <GenreSelector 
-            selectedGenreId={selectedGenreId} 
-            onSelectGenre={setSelectedGenreId} 
-          />
-        </aside>
-
-        {/* メインエリア：タブ切り替えとコンテンツ表示 */}
-        <main className="flex-1 min-w-0 w-full bg-slate-50/50 p-4 md:p-8">
-          <Tabs defaultValue="knowledge" className="w-full">
-            {/* ナビゲーションタブ：将来的に各分析画面やAI検索機能へ拡張予定 */}
-            <TabsList className="bg-slate-200/50 p-1 mb-8">
-              <TabsTrigger value="knowledge" className="gap-2"><BookOpen size={16}/>ナレッジ</TabsTrigger>
-              <TabsTrigger value="network" className="gap-2"><Network size={16}/>ネットワーク</TabsTrigger>
-              <TabsTrigger value="analytics" className="gap-2"><BarChart3 size={16}/>分析</TabsTrigger>
-              <TabsTrigger value="ai-search" className="gap-2"><Bot size={16}/>AI検索</TabsTrigger>
-            </TabsList>
-
-            {/* ナレッジ一覧タブの内容 */}
-            <TabsContent value="knowledge" className="space-y-6">
-              {/* テキスト入力による動的検索バー */}
-              <div className="relative max-w-full">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                <input 
-                  type="text"
-                  placeholder="ナレッジを検索..."
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-
-              {/* ナレッジ一覧表示コンポーネント
-                  propsとしてフィルタリング用のステートを渡し、内部でAPI通信と表示を実行
-              */}
-              <div className="w-full"> {/* 親要素で幅を広げる */}
-                <KnowledgeList 
-                  selectedGenreId={selectedGenreId} 
-                  searchQuery={searchQuery} 
-                />
-              </div>
-            </TabsContent>
-            {/* --- ネットワークタブの内容--- */}
-            <TabsContent value="network" className="space-y-6">
-              <div className="max-w-full">
-                <h2 className="text-xl font-bold text-slate-900">ナレッジネットワーク</h2>
-                <p className="text-sm text-slate-600">
-                  関連性を視覚化しています。ドラッグで移動、スクロールでズームできます。
-                </p>
-              </div>
-              
-              <div className="w-full bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden" style={{ height: 'calc(100vh - 280px)' }}>
-                <Suspense fallback={
-                  <div className="flex items-center justify-center h-full text-slate-400">
-                    ネットワークを読み込み中...
-                  </div>
-                }>
-                  {/* 必要に応じてここにも props (selectedGenreId等) を渡せます */}
-                  <KnowledgeNetwork />
-                </Suspense>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </main>
-      </div>
-    </div>
+    <AppLayout
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+      selectedGenreId={selectedGenreId}
+      onSelectGenre={setSelectedGenreId}
+      viewMode={viewMode}
+      onViewModeChange={setViewMode}
+    >
+      {renderTabContent()}
+    </AppLayout>
   );
 }
