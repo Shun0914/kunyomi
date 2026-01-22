@@ -116,11 +116,12 @@ export async function incrementViewCount(id: number): Promise<void> {
  * ドキュメントの「役立った」評価を追加/更新
  * @param id ドキュメントID
  * @param isHelpful 役立ったかどうか
+ * @returns 更新されたドキュメント情報
  */
 export async function evaluateDocument(
   id: number,
   isHelpful: boolean
-): Promise<void> {
-  return post<void>(`/api/documents/${id}/evaluate`, { is_helpful: isHelpful });
+): Promise<Document> {
+  return post<Document>(`/api/documents/${id}/evaluate`, { is_helpful: isHelpful });
 }
 

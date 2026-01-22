@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { getDocument, incrementViewCount } from '@/lib/api/documents';
+import { getDocument, incrementViewCount, evaluateDocument } from '@/lib/api/documents';
+import { ApiError } from '@/lib/api/client';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -106,46 +107,28 @@ export default function KnowledgeDetail({ id }: Props) {
       setIsSubmittingEval(true);
       setEvalError(null);
 
-      const res = await fetch(`http://127.0.0.1:8000/api/documents/${doc.id}/evaluate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_helpful: isHelpful }),
-      });
+      const updated = await evaluateDocument(doc.id, isHelpful);
 
-      if (!res.ok) {
-        // 409 = すでに評価済み（仕様どおり）なので「エラー表示しない」
-        if (res.status === 409) {
-          setEvalError(null);
-          // 押した方に合わせて UI の状態だけ整える（どちらでもOKだが、ここは厳密に）
-          setEvalStatus(isHelpful ? 'helpful' : 'not_helpful');
-          return;
-        }
+      // 画面表示を確実に更新
+      const newHelpfulCount = pickNumber(updated.helpful_count, helpfulCount);
+      const newHelpfulnessScore = pickNumber(updated.helpfulness_score, helpfulnessScore);
 
-        const text = await res.text().catch(() => '');
-        throw new Error(`評価送信に失敗しました (${res.status}) ${text}`);
-      }
-
-      const updated = (await res.json()) as Partial<DocumentDetail>;
-
-      // 画面表示を確実に更新（updatedに値が入らないケースでも壊れない）
-      const newHelpfulCount =
-        typeof updated.helpful_count === 'number'
-          ? updated.helpful_count
-          : (doc.helpful_count ?? helpfulCount);
-
-      const newHelpfulnessScore =
-        typeof updated.helpfulness_score === 'number'
-          ? updated.helpfulness_score
-          : (doc.helpfulness_score ?? helpfulnessScore);
-
-      setHelpfulCount(pickNumber(newHelpfulCount, 0));
-      setHelpfulnessScore(pickNumber(newHelpfulnessScore, 0));
+      setHelpfulCount(newHelpfulCount);
+      setHelpfulnessScore(newHelpfulnessScore);
       setEvalStatus(isHelpful ? 'helpful' : 'not_helpful');
 
       // doc自体も更新（表示に一貫性を出す）
       setDoc((prev) => (prev ? { ...prev, ...updated } : prev));
     } catch (e: unknown) {
-      setEvalError(toErrorMessage(e) || '評価送信に失敗しました');
+      // 409 = すでに評価済み（仕様どおり）なので「エラー表示しない」
+      if (e instanceof ApiError && e.status === 409) {
+        setEvalError(null);
+        // 押した方に合わせて UI の状態だけ整える
+        setEvalStatus(isHelpful ? 'helpful' : 'not_helpful');
+      } else {
+        const errorMessage = toErrorMessage(e);
+        setEvalError(errorMessage || '評価送信に失敗しました');
+      }
     } finally {
       setIsSubmittingEval(false);
     }
