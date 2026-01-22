@@ -39,6 +39,7 @@ export function KnowledgeForm({
   const [genresLoading, setGenresLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [createdDocumentId, setCreatedDocumentId] = useState<number | null>(null);
   const [errors, setErrors] = useState<{
     title?: string;
     content?: string;
@@ -62,16 +63,6 @@ export function KnowledgeForm({
     };
     fetchGenres();
   }, []);
-
-  const resetForm = () => {
-    setTitle('');
-    setContent('');
-    setGenreId('');
-    setExternalLink('');
-    setSelectedKeywordNames([]);
-    setCustomKeyword('');
-    setErrors({});
-  };
 
   const validateForm = (): boolean => {
     const newErrors: typeof errors = {};
@@ -99,13 +90,14 @@ export function KnowledgeForm({
     setIsSubmitting(true);
     setErrors({});
     try {
-      await createDocument({
+      const response = await createDocument({
         title: title.trim(),
         content: content.trim(),
         genre_id: parseInt(genreId),
         external_link: externalLink.trim() || undefined,
         keywords: selectedKeywordNames,
       });
+      setCreatedDocumentId(response.id);
       setShowSuccessDialog(true);
     } catch (error) {
       const errorMessage = error instanceof Error 
@@ -115,6 +107,13 @@ export function KnowledgeForm({
       console.error('Failed to create document:', error);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSuccessDialogClose = () => {
+    setShowSuccessDialog(false);
+    if (createdDocumentId) {
+      router.push(`/documents/${createdDocumentId}`);
     }
   };
 
@@ -256,7 +255,7 @@ export function KnowledgeForm({
             <AlertDialogDescription>ナレッジの登録が正常に完了しました。</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={() => { setShowSuccessDialog(false); resetForm(); }}>OK</AlertDialogAction>
+            <AlertDialogAction onClick={handleSuccessDialogClose}>OK</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
