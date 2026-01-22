@@ -80,7 +80,7 @@ export async function getDocument(id: number): Promise<Document> {
 export async function createDocument(
   data: CreateDocumentRequest
 ): Promise<Document> {
-  return post<Document>('/api/documents', data);
+  return post<Document>('/api/documents/', data);
 }
 
 /**
