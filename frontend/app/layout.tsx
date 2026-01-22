@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "TSUMIBA - ナレッジベース",
+    default: "TSUMIBA",
     template: "%s | TSUMIBA",
   },
   description: "社内ナレッジを整理・検索し、知見を活用しやすくするナレッジベース。",
