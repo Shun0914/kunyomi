@@ -33,6 +33,7 @@ export default function DocumentListPage() {
   const [keywords, setKeywords] = useState<Keyword[]>([]);
   const [keywordsLoading, setKeywordsLoading] = useState(false);
   const [keywordsError, setKeywordsError] = useState<string | null>(null);
+  const [keywordsFetched, setKeywordsFetched] = useState(false); 
 
   // URLパラメータの変更を監視
   useEffect(() => {
@@ -41,23 +42,25 @@ export default function DocumentListPage() {
   }, [searchParams]);
 
   // 作成モードに切り替わったときにキーワードを取得
-  useEffect(() => {
-    if (viewMode === 'create' && keywords.length === 0 && !keywordsLoading) {
-      const fetchKeywords = async () => {
-        try {
-          setKeywordsLoading(true);
-          const data = await getPopularKeywords(20);
-          setKeywords(data);
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : 'キーワードの取得に失敗しました';
-          setKeywordsError(msg);
-        } finally {
-          setKeywordsLoading(false);
-        }
-      };
-      fetchKeywords();
-    }
-  }, [viewMode, keywords.length, keywordsLoading]);
+useEffect(() => {
+  if (viewMode === 'create' && !keywordsFetched && !keywordsLoading) { 
+    const fetchKeywords = async () => {
+      try {
+        setKeywordsLoading(true);
+        const data = await getPopularKeywords(20);
+        setKeywords(data);
+        setKeywordsFetched(true); 
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'キーワードの取得に失敗しました';
+        setKeywordsError(msg);
+        setKeywordsFetched(true); 
+      } finally {
+        setKeywordsLoading(false);
+      }
+    };
+    fetchKeywords();
+  }
+}, [viewMode, keywordsFetched, keywordsLoading]); 
 
   // タブごとのコンテンツを描画
   const renderTabContent = () => {
