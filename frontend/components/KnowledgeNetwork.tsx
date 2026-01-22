@@ -56,7 +56,7 @@ export default function KnowledgeNetwork({
   onGenreSelect,
 }: KnowledgeNetworkProps) {
   const router = useRouter();
-  const fgRef = useRef<ForceGraphMethods>();
+  const fgRef = useRef<ForceGraphMethods | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
   
   const [graphData, setGraphData] = useState<NetworkGraphData>({ nodes: [], links: [] });
