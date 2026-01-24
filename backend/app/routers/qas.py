@@ -10,13 +10,17 @@ from app.models.document import Document
 from app.models.user import User
 from app.schemas.qa import QAResponse, QACreateRequest, QAAnswerRequest
 from app.utils.notifier import send_notification_email
+from dotenv import load_dotenv
 
 router = APIRouter(tags=["qas"])
 
 # 仮のユーザーID（認証機能実装までの暫定措置）
 TEMP_USER_ID = 1
 
+load_dotenv() # .envがあれば読み込む
+
 # 環境変数からフロントエンドのURLを取得（未設定時のデフォルトは localhost:3000）
+# Azureの設定（FRONTEND_URL）が優先されます
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
 # ========== GET: QA取得系 ==========
