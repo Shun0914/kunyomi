@@ -10,14 +10,28 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 type Props = { id: string };
 
+type KeywordLike = { id?: number; name?: string } | string;
+
 type DocumentDetail = {
   id: number;
+
   title?: string;
   content?: string;
+
+  created_at?: string;
+  updated_at?: string;
+  created_by?: number | null;
+  updated_by?: number | null;
+
+  genre_id?: number | null;
+  keywords?: KeywordLike[];
+
   view_count?: number;
   helpful_count?: number;
   helpfulness_score?: number;
 };
+
+
 
 type EvalStatus = 'none' | 'helpful' | 'not_helpful';
 
@@ -38,6 +52,25 @@ function toErrorMessage(e: unknown): string {
 
 function pickNumber(v: unknown, fallback = 0): number {
   return typeof v === 'number' && Number.isFinite(v) ? v : fallback;
+}
+function formatDateTime(iso?: string): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleString('ja-JP', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function normalizeKeywordNames(keywords?: KeywordLike[]): string[] {
+  if (!keywords || keywords.length === 0) return [];
+  return keywords
+    .map((kw) => (typeof kw === 'string' ? kw : kw?.name))
+    .filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
 }
 
 export default function KnowledgeDetail({ id }: Props) {
@@ -66,6 +99,8 @@ export default function KnowledgeDetail({ id }: Props) {
 
       try {
         const data = (await getDocument(Number(id))) as DocumentDetail;
+        
+
 
         if (!cancelled) {
           setDoc(data);
@@ -141,8 +176,38 @@ export default function KnowledgeDetail({ id }: Props) {
   return (
     <div>
       <h1>{doc.title ?? `Document ${doc.id}`}</h1>
+          <div className="mt-2 text-sm text-gray-600 space-y-1">
+      <div>作成者ID: {doc.created_by ?? '—'}</div>
+
+
+      <div>
+        日時:{' '}
+        {doc.updated_at
+          ? `更新 ${formatDateTime(doc.updated_at)}`
+          : `作成 ${formatDateTime(doc.created_at)}`}
+      </div>
+
+      <div>ジャンルID: {doc.genre_id ?? '—'}</div>
+
+
+      <div className="flex flex-wrap items-center gap-2">
+        <span>キーワード:</span>
+        {normalizeKeywordNames(doc.keywords).length > 0 ? (
+          normalizeKeywordNames(doc.keywords).map((name, idx) => (
+            <span key={`${name}-${idx}`} className="px-2 py-0.5 rounded border text-xs">
+              {name}
+            </span>
+          ))
+        ) : (
+          <span>—</span>
+        )}
+      </div>
 
       {typeof doc.view_count === 'number' && <div>閲覧数: {doc.view_count}</div>}
+    </div>
+
+
+
 
       <div className="mt-3 flex items-center gap-2">
         <button
