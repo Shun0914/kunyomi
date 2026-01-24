@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { GenreSelector } from '@/components/GenreSelector';
 import KnowledgeDetail from '@/components/KnowledgeDetail';
+import DocumentQASession from '@/components/DocumentQASession';
 
 export default function DocumentDetailClient({ id }: { id: string }) {
   const [selectedGenreId, setSelectedGenreId] = useState<number | null>(null);
@@ -68,9 +69,12 @@ export default function DocumentDetailClient({ id }: { id: string }) {
               </div>
 
               <div className="max-w-4xl">
+                {/* ナレッジ本文エリア */}
                 <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 md:p-8">
                   <KnowledgeDetail id={id} />
                 </div>
+                {/* QAセッション */}
+                <DocumentQASession documentId={id} />
               </div>
             </TabsContent>
 

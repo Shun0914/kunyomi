@@ -36,6 +36,7 @@ class Document(Base):
     creator = relationship("User", foreign_keys=[created_by], backref="created_documents")
     updater = relationship("User", foreign_keys=[updated_by], backref="updated_documents")
     keywords = relationship("Keyword", secondary="document_keywords", back_populates="documents", overlaps="document_keyword_relations")
+    qas = relationship("QA", back_populates="document", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Document(id={self.id}, title='{self.title}', status='{self.status.value}')>"

@@ -37,6 +37,10 @@ jobs:
           mkdir deploy
           cp -r ./frontend/.next/standalone/. ./deploy
           cp -r ./frontend/.next/static/. ./deploy/.next/static
+          cp -r ./frontend/public/. ./deploy/public
+          # Next.js App Routerのファビコンをルートにコピー
+          cp ./frontend/app/favicon.ico ./deploy/favicon.ico 2>/dev/null || true
+          cp ./frontend/app/icon.png ./deploy/icon.png 2>/dev/null || true
 
       - name: Zip artifact for deployment
         run: zip release.zip ./deploy -r
