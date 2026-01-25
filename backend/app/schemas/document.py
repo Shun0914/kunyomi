@@ -5,12 +5,25 @@ from typing import List, Optional, Any
 
 from app.schemas.keyword import KeywordResponse
 
+class GenreSimpleResponse(BaseModel):
+    id: int
+    name: str
+    class Config:
+        from_attributes = True
+
+class UserSimpleResponse(BaseModel):
+    id: int
+    name: str
+    class Config:
+        from_attributes = True
 
 class DocumentDetailResponse(BaseModel):
     id: int
     title: str
     content: str
     genre_id: int
+    genre: Optional[GenreSimpleResponse] = None
+    creator: Optional[UserSimpleResponse] = None
     external_link: Optional[str]
     status: str
 
