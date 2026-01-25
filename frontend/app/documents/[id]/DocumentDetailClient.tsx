@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { BookOpen, LogIn, Plus, ArrowLeft, Network, BarChart3, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -15,12 +16,18 @@ export default function DocumentDetailClient({ id }: { id: string }) {
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <header className="flex items-center justify-between px-6 py-3 border-b sticky top-0 bg-white z-20">
-        <div className="flex items-center gap-2">
-          <BookOpen className="text-blue-600" size={32} />
-          <Link href="/document-list" className="text-xl font-bold tracking-tight">
-            ナレッジベース
+        <div className="flex items-center gap-3">
+          <Link href="/document-list" className="flex items-center gap-3">
+            <Image
+              src="/brand/tsumiba-logo-trim.png"
+              alt="TSUMIBA"
+              width={120}
+              height={28}
+              priority
+            />
           </Link>
         </div>
+
         <div className="flex items-center gap-3">
           <Button variant="ghost" className="gap-2">
             <LogIn size={18} /> ログイン
@@ -73,6 +80,7 @@ export default function DocumentDetailClient({ id }: { id: string }) {
                 <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 md:p-8">
                   <KnowledgeDetail id={id} />
                 </div>
+
                 {/* QAセッション */}
                 <DocumentQASession documentId={id} />
               </div>
