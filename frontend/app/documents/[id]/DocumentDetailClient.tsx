@@ -2,96 +2,69 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { BookOpen, LogIn, Plus, ArrowLeft, Network, BarChart3, Bot } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { GenreSelector } from '@/components/GenreSelector';
+import { ArrowLeft } from 'lucide-react';
+import { AppLayout, TabType } from '@/components/AppLayout';
 import KnowledgeDetail from '@/components/KnowledgeDetail';
 import DocumentQASession from '@/components/DocumentQASession';
 
 export default function DocumentDetailClient({ id }: { id: string }) {
+  // 一覧画面と共通の状態管理
+  const [activeTab, setActiveTab] = useState<TabType>('knowledge');
   const [selectedGenreId, setSelectedGenreId] = useState<number | null>(null);
 
+  // タブごとのコンテンツを描画
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'knowledge':
+        return (
+          <div className="max-w-4xl space-y-6">
+            <div className="mb-2">
+              <Link
+                href="/document-list"
+                className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                <ArrowLeft size={16} />
+                一覧に戻る
+              </Link>
+            </div>
+
+            {/* ナレッジ本文エリア */}
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 md:p-8">
+              <KnowledgeDetail id={id} />
+            </div>
+
+            {/* QAセッション */}
+            <DocumentQASession documentId={id} />
+          </div>
+        );
+
+      case 'network':
+        return (
+          <div className="max-w-4xl text-center py-20 text-slate-500">
+            ネットワーク表示は一覧画面で確認してください。
+          </div>
+        );
+
+      default:
+        return (
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400 border-2 border-dashed rounded-xl">
+            <p className="text-sm">この機能は詳細画面では開発中です</p>
+          </div>
+        );
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-white text-slate-900">
-      <header className="flex items-center justify-between px-6 py-3 border-b sticky top-0 bg-white z-20">
-        <div className="flex items-center gap-3">
-          <Link href="/document-list" className="flex items-center gap-3">
-            <Image
-              src="/brand/tsumiba-logo-trim.png"
-              alt="TSUMIBA"
-              width={120}
-              height={28}
-              priority
-            />
-          </Link>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" className="gap-2">
-            <LogIn size={18} /> ログイン
-          </Button>
-          <Button className="bg-black text-white hover:bg-slate-800 gap-2">
-            <Plus size={18} /> 新規作成
-          </Button>
-        </div>
-      </header>
-
-      <div className="flex">
-        <aside className="w-64 border-r min-h-[calc(100vh-65px)] bg-white sticky top-[65px]">
-          <GenreSelector selectedGenreId={selectedGenreId} onSelectGenre={setSelectedGenreId} />
-        </aside>
-
-        <main className="flex-1 bg-slate-50/50 p-4 md:p-8">
-          <Tabs defaultValue="knowledge" className="w-full">
-            <TabsList className="bg-slate-200/50 p-1 mb-8">
-              <TabsTrigger value="knowledge" className="gap-2">
-                <BookOpen size={16} />
-                ナレッジ
-              </TabsTrigger>
-              <TabsTrigger value="network" className="gap-2">
-                <Network size={16} />
-                ネットワーク
-              </TabsTrigger>
-              <TabsTrigger value="analytics" className="gap-2">
-                <BarChart3 size={16} />
-                分析
-              </TabsTrigger>
-              <TabsTrigger value="ai-search" className="gap-2">
-                <Bot size={16} />
-                AI検索
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="knowledge">
-              <div className="mb-6">
-                <Link
-                  href="/document-list"
-                  className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900"
-                >
-                  <ArrowLeft size={16} />
-                  一覧に戻る
-                </Link>
-              </div>
-
-              <div className="max-w-4xl">
-                {/* ナレッジ本文エリア */}
-                <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 md:p-8">
-                  <KnowledgeDetail id={id} />
-                </div>
-
-                {/* QAセッション */}
-                <DocumentQASession documentId={id} />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="network" />
-            <TabsContent value="analytics" />
-            <TabsContent value="ai-search" />
-          </Tabs>
-        </main>
-      </div>
-    </div>
+    <AppLayout
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+      selectedGenreId={selectedGenreId}
+      onSelectGenre={setSelectedGenreId}
+      // 詳細画面なので viewMode は固定、または必要に応じて管理
+      viewMode="list" 
+      onViewModeChange={() => {}} 
+    >
+      {renderTabContent()}
+    </AppLayout>
   );
 }
