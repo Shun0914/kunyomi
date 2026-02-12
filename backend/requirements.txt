@@ -7,9 +7,11 @@ python-dotenv==1.0.0
 
 # データベース関連
 sqlalchemy==2.0.23
-pymysql==1.1.0
-cryptography==41.0.7  # pymysqlに必要
+pymysql==1.1.1
+cryptography>=44.0.1  # pymysqlに必要 (CVE-2024-12797 対策で 44.0.1 以上)
 
 # マイグレーション
 alembic==1.12.1
+
+zipp>=3.19.1  # 脆弱性対策 (Snyk)
 
