@@ -173,98 +173,101 @@ export default function KnowledgeDetail({ id }: Props) {
   if (error) return <div>読み込みに失敗しました: {error}</div>;
   if (!doc) return <div>ドキュメントが見つかりませんでした</div>;
 
-  return (
-    <div>
-      <h1>{doc.title ?? `Document ${doc.id}`}</h1>
-          <div className="mt-2 text-sm text-gray-600 space-y-1">
-      <div>作成者ID: {doc.created_by ?? '—'}</div>
+return (
+    <div className="max-w-4xl mx-auto p-6 space-y-6 bg-white shadow-sm rounded-lg">
+      {/* 1. ドキュメントタイトル (大きく、太字) */}
+      <h1 className="text-3xl font-bold text-gray-900 border-b pb-4">
+        {doc.title ?? `Document ${doc.id}`}
+      </h1>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 bg-gray-50 p-4 rounded">
+        {/* 2. 作成者 (和名で表示) */}
+        <div>
+          <span className="font-semibold text-gray-500">作成者:</span> {doc.creator?.name ?? '不明'}
+        </div>
 
-      <div>
-        日時:{' '}
-        {doc.updated_at
-          ? `更新 ${formatDateTime(doc.updated_at)}`
-          : `作成 ${formatDateTime(doc.created_at)}`}
-      </div>
+        {/* 4. ジャンル (和名で表示) */}
+        <div>
+          <span className="font-semibold text-gray-500">ジャンル:</span> {doc.genre?.name ?? '未分類'}
+        </div>
 
-      <div>ジャンルID: {doc.genre_id ?? '—'}</div>
-
-
-      <div className="flex flex-wrap items-center gap-2">
-        <span>キーワード:</span>
-        {normalizeKeywordNames(doc.keywords).length > 0 ? (
-          normalizeKeywordNames(doc.keywords).map((name, idx) => (
-            <span key={`${name}-${idx}`} className="px-2 py-0.5 rounded border text-xs">
+        {/* 3. 作成日時と更新日時の両方を表示 */}
+        <div>
+          <span className="font-semibold text-gray-500">作成日時:</span> {formatDateTime(doc.created_at)}
+        </div>
+        <div>
+          <span className="font-semibold text-gray-500">更新日時:</span> {formatDateTime(doc.updated_at)}
+        </div>
+        {/* キーワード */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-semibold text-gray-500">キーワード:</span>
+          {normalizeKeywordNames(doc.keywords).map((name, idx) => (
+            <span key={`${name}-${idx}`} className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs font-medium border border-blue-100">
               {name}
             </span>
-          ))
-        ) : (
-          <span>—</span>
-        )}
+          ))}
+        </div>
       </div>
 
-      {typeof doc.view_count === 'number' && <div>閲覧数: {doc.view_count}</div>}
-    </div>
 
-
-
-
-      <div className="mt-3 flex items-center gap-2">
-        <button
-          className={`px-3 py-1 rounded border text-sm ${
-            evalStatus === 'helpful' ? 'bg-black text-white' : ''
-          }`}
-          onClick={() => handleEvaluate(true)}
-          disabled={isSubmittingEval || evalStatus !== 'none'}
-        >
-          👍 役に立った
-        </button>
-
-        <button
-          className={`px-3 py-1 rounded border text-sm ${
-            evalStatus === 'not_helpful' ? 'bg-black text-white' : ''
-          }`}
-          onClick={() => handleEvaluate(false)}
-          disabled={isSubmittingEval || evalStatus !== 'none'}
-        >
-          👎 そうでもない
-        </button>
-
-        {isSubmittingEval && <span className="text-sm text-gray-500">送信中…</span>}
-        {evalStatus !== 'none' && <span className="text-sm text-gray-500">評価済み</span>}
-      </div>
-
-      <div className="mt-2 text-sm text-gray-600">
-        評価件数: {helpfulCount} ／ 役立ち度: {helpfulnessScore.toFixed(2)}
-      </div>
-
-      {evalError && <div className="mt-2 text-sm text-red-600">{evalError}</div>}
-
-      <div className="prose dark:prose-invert max-w-none border-t pt-4">
+      {/* 本文 (Markdown) */}
+      <div className="prose prose-slate max-w-none py-4">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           components={{
             code({ inline, className, children, ...props }: any) {
               const match = /language-(\w+)/.exec(className || '');
               return !inline && match ? (
-                <SyntaxHighlighter
-                  {...props}
-                  style={vscDarkPlus}
-                  language={match[1]}
-                  PreTag="div"
-                >
+                <SyntaxHighlighter {...props} style={vscDarkPlus} language={match[1]} PreTag="div">
                   {String(children).replace(/\n$/, '')}
                 </SyntaxHighlighter>
               ) : (
-                <code className={className} {...props}>
-                  {children}
-                </code>
+                <code className={className} {...props}>{children}</code>
               );
             },
           }}
         >
           {doc.content ?? ''}
         </ReactMarkdown>
+      </div>
+
+      <hr className="border-t-2 border-gray-100" />
+
+      {/* 5. 閲覧数・評価数・役立ち度を表示 */}
+      <div className="flex items-center justify-between text-sm text-gray-500 px-2">
+        <div className="flex gap-6">
+          <span>閲覧数: <strong className="text-gray-900">{doc.view_count}</strong></span>
+          <span>評価件数: <strong className="text-gray-900">{helpfulCount}</strong></span>
+          <span>役立ち度: <strong className="text-gray-900">{helpfulnessScore.toFixed(2)}</strong></span>
+        </div>
+      </div>
+
+      {/* 5. 線で区切った後に評価ボタンを表示 */}
+      <div className="bg-gray-50 p-6 rounded-lg border border-dashed border-gray-300">
+        <p className="text-center text-sm text-gray-600 mb-4 font-medium">このドキュメントは役に立ちましたか？</p>
+        <div className="flex justify-center items-center gap-4">
+          <button
+            className={`flex items-center gap-2 px-6 py-2 rounded-full border transition-all ${
+              evalStatus === 'helpful' ? 'bg-green-600 text-white border-green-600' : 'bg-white hover:bg-green-50 text-gray-700'
+            }`}
+            onClick={() => handleEvaluate(true)}
+            disabled={isSubmittingEval || evalStatus !== 'none'}
+          >
+            👍 役に立った
+          </button>
+
+          <button
+            className={`flex items-center gap-2 px-6 py-2 rounded-full border transition-all ${
+              evalStatus === 'not_helpful' ? 'bg-gray-800 text-white border-gray-800' : 'bg-white hover:bg-gray-100 text-gray-700'
+            }`}
+            onClick={() => handleEvaluate(false)}
+            disabled={isSubmittingEval || evalStatus !== 'none'}
+          >
+            👎 そうでもない
+          </button>
+        </div>
+        {evalStatus !== 'none' && <p className="text-center text-blue-600 text-xs mt-3">評価済み</p>}
+        {evalError && <div className="mt-2 text-center text-xs text-red-600">{evalError}</div>}
       </div>
     </div>
   );
