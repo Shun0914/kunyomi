@@ -15,3 +15,7 @@ alembic==1.12.1
 
 zipp>=3.19.1  # 脆弱性対策 (Snyk)
 
+# テスト
+pytest>=7.4.0
+httpx>=0.25.0,<0.28.0  # Starlette TestClient互換のため0.28未満
+
